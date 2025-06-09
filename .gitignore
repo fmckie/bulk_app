@@ -33,6 +33,18 @@ docker-compose.override.yml
 # Dependencies
 node_modules/
 
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv
+*.egg-info/
+flask.log
+
 # Temporary app directory (created for Docker)
 app/
 
