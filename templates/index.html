@@ -1,0 +1,140 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Kinobody Tracker{% endblock %}
+
+{% block content %}
+<div class="container">
+    <!-- Welcome Section -->
+    <section class="welcome-section">
+        <h2>Welcome back, Warrior!</h2>
+        <p class="date">{{ current_date }}</p>
+    </section>
+
+    <!-- Quick Stats Cards -->
+    <section class="stats-grid">
+        <div class="stat-card">
+            <div class="stat-icon">💪</div>
+            <div class="stat-content">
+                <h3>Current Weight</h3>
+                <p class="stat-value">85.0 kg</p>
+                <p class="stat-change">+0.5 kg this week</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🎯</div>
+            <div class="stat-content">
+                <h3>Goal Weight</h3>
+                <p class="stat-value">90.0 kg</p>
+                <p class="stat-progress">5.0 kg to go</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">📈</div>
+            <div class="stat-content">
+                <h3>Streak</h3>
+                <p class="stat-value">12 days</p>
+                <p class="stat-subtitle">Keep it up!</p>
+            </div>
+        </div>
+        
+        <div class="stat-card">
+            <div class="stat-icon">🔥</div>
+            <div class="stat-content">
+                <h3>Calories Today</h3>
+                <p class="stat-value">2,850</p>
+                <p class="stat-subtitle">350 remaining</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Today's Workout -->
+    <section class="today-workout">
+        <div class="section-header">
+            <h3>Today's Workout</h3>
+            <a href="/workout" class="btn-link">Start →</a>
+        </div>
+        <div class="workout-preview">
+            <h4>Workout A - Chest & Back</h4>
+            <ul class="exercise-list">
+                <li>Incline Barbell Press - 3 sets</li>
+                <li>Weighted Pull-ups - 3 sets</li>
+                <li>Standing Press - 3 sets</li>
+                <li>Lateral Raises - 4 sets</li>
+            </ul>
+        </div>
+    </section>
+
+    <!-- Recent Progress Chart -->
+    <section class="progress-chart">
+        <h3>Weight Progress</h3>
+        <div class="chart-container">
+            <canvas id="weightChart"></canvas>
+        </div>
+    </section>
+
+    <!-- Quick Actions -->
+    <section class="quick-actions">
+        <button class="action-btn primary" onclick="location.href='/workout'">
+            <span class="btn-icon">🏋️</span>
+            Log Workout
+        </button>
+        <button class="action-btn secondary" onclick="location.href='/nutrition'">
+            <span class="btn-icon">🍽️</span>
+            Track Meal
+        </button>
+        <button class="action-btn secondary" onclick="location.href='/measurements'">
+            <span class="btn-icon">📏</span>
+            Update Measurements
+        </button>
+    </section>
+</div>
+
+<!-- Placeholder for PWA install prompt -->
+<div id="install-prompt" class="install-prompt hidden">
+    <p>Add Kinobody Tracker to your home screen for quick access!</p>
+    <button id="install-btn" class="btn-primary">Install</button>
+    <button id="dismiss-btn" class="btn-text">Not now</button>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+// Initialize weight progress chart
+document.addEventListener('DOMContentLoaded', function() {
+    const ctx = document.getElementById('weightChart').getContext('2d');
+    const weightChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+            labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4', 'This Week'],
+            datasets: [{
+                label: 'Weight (kg)',
+                data: [83.5, 84.0, 84.3, 84.5, 85.0],
+                borderColor: '#4CAF50',
+                backgroundColor: 'rgba(76, 175, 80, 0.1)',
+                tension: 0.4,
+                pointRadius: 6,
+                pointBackgroundColor: '#4CAF50'
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    display: false
+                }
+            },
+            scales: {
+                y: {
+                    beginAtZero: false,
+                    min: 82,
+                    max: 86
+                }
+            }
+        }
+    });
+});
+</script>
+{% endblock %}

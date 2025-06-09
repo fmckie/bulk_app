@@ -4,20 +4,25 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-This is the Kinobody Greek God Program Fitness Tracker - a mobile-first web application for tracking fitness progress using the Kinobody methodology. The app uses a Python backend with a vanilla JavaScript frontend.
+This is the Kinobody Greek God Program Fitness Tracker - a mobile-first web application for tracking fitness progress using the Kinobody methodology. 
+
+**Note**: The folders marked with "(example)" are demo/reference implementations, not the actual app. The actual app will be built with:
+- **Frontend**: Flask framework serving HTML, CSS, and JavaScript
+- **Backend**: Python with Flask for API endpoints and business logic
 
 ## Commands
 
 ### Local Development
 ```bash
-# Start Python backend server
+# Start Flask application
 python3 app.py
 
-# Or run with Flask (if using Flask)
-python3 -m flask run --port 8000
+# Or run with Flask development server
+flask run --debug --port 8000
 
-# For frontend development with hot reload
-python3 -m http.server 8000
+# Set Flask environment variables
+export FLASK_APP=app.py
+export FLASK_ENV=development
 ```
 
 ### Docker Commands
@@ -50,19 +55,58 @@ docker push registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
 psql -h <supabase-host> -U postgres -d postgres -f test_supabase_table.sql
 ```
 
-### DigitalOcean Deployment
+### DigitalOcean Deployment (Using MCP Tools)
+
+**IMPORTANT**: Use DigitalOcean MCP tools for deployment instead of manual commands.
+
+```python
+# Using DigitalOcean MCP for App Platform deployment
+# 1. Create app with Docker container
+mcp__digitalocean__create_app({
+    "spec": {
+        "name": "kinobody-tracker",
+        "region": "nyc",
+        "services": [{
+            "name": "web",
+            "image": {
+                "registry_type": "DOCKER_HUB",
+                "repository": "your-dockerhub-username/kinobody-tracker",
+                "tag": "latest"
+            }
+        }]
+    }
+})
+
+# 2. Or deploy from DigitalOcean Container Registry
+mcp__digitalocean__create_app({
+    "spec": {
+        "name": "kinobody-tracker",
+        "region": "nyc",
+        "services": [{
+            "name": "web",
+            "image": {
+                "registry_type": "DOCR",
+                "repository": "kinobody-tracker",
+                "tag": "latest"
+            }
+        }]
+    }
+})
+
+# 3. Monitor deployment status
+mcp__digitalocean__get_app({"id": "app-id"})
+mcp__digitalocean__get_deployment_logs_url({"app_id": "app-id", "type": "DEPLOY"})
+```
+
+### Manual Deployment (Fallback)
 ```bash
-# Using DigitalOcean App Platform
+# Using DigitalOcean App Platform CLI
 doctl apps create --spec app.yaml
 
 # Or deploy with Docker on Droplet
 ssh root@<your-droplet-ip>
 docker pull registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
 docker run -d -p 80:80 --restart always --name kinobody-app registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
-
-# Monitor deployment
-docker ps
-docker logs -f kinobody-app
 ```
 
 ## Git Workflow
@@ -82,13 +126,27 @@ git commit -m "feat: describe your feature here"
 # Push to dev branch
 git push origin dev
 
-# After testing, create PR to merge dev -> main
+# After testing in dev, move to production:
+# Option 1: Using GitHub PR (Recommended)
 gh pr create --title "Feature: Your feature name" --body "Description of changes" --base main --head dev
 
-# Or merge locally after thorough testing
-git checkout main
-git merge dev
-git push origin main
+# Option 2: Using GitHub MCP tools
+mcp__github__create_pull_request({
+    "owner": "your-username",
+    "repo": "bulk_app",
+    "title": "Feature: Your feature name",
+    "head": "dev",
+    "base": "main",
+    "body": "Description of changes and testing completed"
+})
+
+# After PR approval, merge using GitHub MCP
+mcp__github__merge_pull_request({
+    "owner": "your-username",
+    "repo": "bulk_app",
+    "pull_number": PR_NUMBER,
+    "merge_method": "merge"
+})
 ```
 
 ### Commit Guidelines
@@ -103,9 +161,11 @@ git push origin main
 
 ## Architecture
 
-### Backend Structure
-- **Python Backend**: Handles API endpoints, data processing, and Supabase integration
-- **Supabase Integration**: PostgreSQL database with authentication
+### Application Structure
+- **Flask Application**: Single Python app serving both frontend templates and backend API
+- **Frontend**: Flask templates (Jinja2) with HTML, CSS, and JavaScript
+- **Backend API**: Flask routes handling data processing and Supabase integration
+- **Database**: Supabase PostgreSQL with authentication
 - **API Design**: RESTful endpoints for workouts, nutrition, measurements, and progress tracking
 
 ## Supabase Database & Authentication
@@ -206,12 +266,17 @@ CREATE POLICY "Users can update own workouts" ON workouts
 ```
 
 ### Frontend Structure
-- **app/**: Production-ready static files
-- **MD-Pilot-mobile-tracker (example)/**: Development version with example implementation
-- **Core Files**:
-  - `app.js`: Main application logic with KinobodyApp class
-  - `index.html`: Single page application structure
-  - `style.css`: Mobile-first responsive design
+- **templates/**: Flask HTML templates using Jinja2
+  - `base.html`: Base template with common layout
+  - `index.html`: Main application page
+  - Other feature-specific templates
+- **static/**: Static assets served by Flask
+  - `css/`: Stylesheets including mobile-first responsive design
+  - `js/`: JavaScript files for frontend logic
+  - `img/`: Images and icons
+- **Example References**:
+  - `MD-Pilot-mobile-tracker (example)/`: Demo implementation for reference
+  - `example web app/`: Another reference implementation
 
 ### Key Features
 - Reverse Pyramid Training (RPT) workout tracking
@@ -340,10 +405,12 @@ redis-cli -u redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT flushall
 ## Development Notes
 
 - The app is designed as a mobile-first PWA optimized for 425px+ width
-- Frontend uses vanilla JavaScript with ES6+ class-based architecture
-- No npm/yarn dependencies - uses CDN for Chart.js
-- Python backend should handle Supabase authentication and data sync
+- Flask serves both frontend templates and backend API endpoints
+- Frontend JavaScript communicates with Flask backend via AJAX/fetch
+- No npm/yarn dependencies - uses CDN for libraries like Chart.js
+- Flask sessions handle user state with Supabase for persistent storage
 - Local Storage provides offline functionality when backend is unavailable
+- Example folders are for reference only - build the actual app in the main directory
 
 ## Puppeteer Visual Testing
 
@@ -434,23 +501,58 @@ def load_kinobody_config():
 
 ## Deployment Checklist
 
+**IMPORTANT**: All deployments use Docker containers and DigitalOcean MCP tools.
+
 1. **Local Testing**
-   - Run Docker container locally
-   - Test all features
-   - Check mobile responsiveness
+   - Build Docker image: `docker build -t kinobody-tracker .`
+   - Run container locally: `docker run -d -p 8080:80 kinobody-tracker`
+   - Test all features at http://localhost:8080
+   - Check mobile responsiveness at 425px width
 
 2. **Push to Dev Branch**
    - Create feature branch from dev
    - Test thoroughly
    - Commit with descriptive message
+   - Push Docker image to registry
 
-3. **Deploy to Staging (DigitalOcean)**
-   - Build and push Docker image
-   - Deploy to staging environment
-   - Run integration tests
+3. **Deploy to DigitalOcean (Using MCP)**
+   ```python
+   # List existing apps
+   mcp__digitalocean__list_apps({"query": {}})
+   
+   # Create new deployment
+   mcp__digitalocean__create_deployment({
+       "app_id": "your-app-id",
+       "force_build": true
+   })
+   
+   # Monitor deployment
+   mcp__digitalocean__get_deployment({
+       "app_id": "your-app-id",
+       "deployment_id": "deployment-id"
+   })
+   ```
 
-4. **Merge to Production**
-   - Create PR from dev to main
-   - Review changes
-   - Merge after approval
-   - Deploy to production DigitalOcean app
+4. **Production Deployment**
+   - Create PR from dev to main using GitHub MCP:
+     ```python
+     mcp__github__create_pull_request({
+         "owner": "your-username",
+         "repo": "bulk_app",
+         "title": "Release: v1.0.0",
+         "head": "dev",
+         "base": "main",
+         "body": "Production release with tested features"
+     })
+     ```
+   - Review and merge PR using GitHub MCP:
+     ```python
+     mcp__github__merge_pull_request({
+         "owner": "your-username",
+         "repo": "bulk_app",
+         "pull_number": PR_NUMBER
+     })
+     ```
+   - Deploy production app using DigitalOcean MCP
+   - Monitor logs and performance
+   - Rollback if needed using `mcp__digitalocean__rollback_app`

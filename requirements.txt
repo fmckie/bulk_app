@@ -1,0 +1,15 @@
+# Flask and core dependencies
+Flask==3.0.0
+gunicorn==21.2.0
+python-dotenv==1.0.0
+
+# Database and storage
+supabase==2.3.0
+redis==5.0.1
+
+# Additional utilities
+flask-cors==4.0.0
+requests==2.31.0
+
+# Development dependencies (optional)
+flask-debugtoolbar==0.14.1
