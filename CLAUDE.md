@@ -25,11 +25,23 @@ python3 -m http.server 8000
 # Build Docker image
 docker build -t kinobody-tracker .
 
-# Run container
+# Run container locally for testing
 docker run -d -p 8080:80 --name kinobody-app kinobody-tracker
+
+# Test the container
+curl http://localhost:8080
+
+# View container logs
+docker logs kinobody-app
 
 # Stop and remove container
 docker stop kinobody-app && docker rm kinobody-app
+
+# Tag image for DigitalOcean registry
+docker tag kinobody-tracker registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
+
+# Push to DigitalOcean registry
+docker push registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
 ```
 
 ### Database Setup
@@ -37,6 +49,57 @@ docker stop kinobody-app && docker rm kinobody-app
 # Run Supabase table creation
 psql -h <supabase-host> -U postgres -d postgres -f test_supabase_table.sql
 ```
+
+### DigitalOcean Deployment
+```bash
+# Using DigitalOcean App Platform
+doctl apps create --spec app.yaml
+
+# Or deploy with Docker on Droplet
+ssh root@<your-droplet-ip>
+docker pull registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
+docker run -d -p 80:80 --restart always --name kinobody-app registry.digitalocean.com/<your-registry>/kinobody-tracker:latest
+
+# Monitor deployment
+docker ps
+docker logs -f kinobody-app
+```
+
+## Git Workflow
+
+### IMPORTANT: Always use development branch for new features
+```bash
+# Create and switch to dev branch
+git checkout -b dev
+
+# Make your changes and test thoroughly
+# ... edit files ...
+
+# Stage and commit changes
+git add -A
+git commit -m "feat: describe your feature here"
+
+# Push to dev branch
+git push origin dev
+
+# After testing, create PR to merge dev -> main
+gh pr create --title "Feature: Your feature name" --body "Description of changes" --base main --head dev
+
+# Or merge locally after thorough testing
+git checkout main
+git merge dev
+git push origin main
+```
+
+### Commit Guidelines
+- Always commit to `dev` branch first
+- Test thoroughly before merging to `main` (production)
+- Use descriptive commit messages:
+  - `feat:` for new features
+  - `fix:` for bug fixes
+  - `docs:` for documentation
+  - `refactor:` for code improvements
+  - `test:` for test additions/changes
 
 ## Architecture
 
@@ -76,3 +139,26 @@ The application uses Supabase with tables for:
 - No npm/yarn dependencies - uses CDN for Chart.js
 - Python backend should handle Supabase authentication and data sync
 - Local Storage provides offline functionality when backend is unavailable
+
+## Deployment Checklist
+
+1. **Local Testing**
+   - Run Docker container locally
+   - Test all features
+   - Check mobile responsiveness
+
+2. **Push to Dev Branch**
+   - Create feature branch from dev
+   - Test thoroughly
+   - Commit with descriptive message
+
+3. **Deploy to Staging (DigitalOcean)**
+   - Build and push Docker image
+   - Deploy to staging environment
+   - Run integration tests
+
+4. **Merge to Production**
+   - Create PR from dev to main
+   - Review changes
+   - Merge after approval
+   - Deploy to production DigitalOcean app
