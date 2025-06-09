@@ -1,3 +1,6 @@
+// Initialize API mode check
+API.checkMode();
+
 // Mobile Navigation Toggle
 document.addEventListener('DOMContentLoaded', function() {
     const navToggle = document.getElementById('navToggle');
@@ -81,6 +84,20 @@ if ('serviceWorker' in navigator) {
 // API Helper Functions
 const API = {
     baseURL: '/api',
+    demoMode: false,
+    
+    async checkMode() {
+        try {
+            const response = await fetch('/api/health');
+            const data = await response.json();
+            if (data.mode === 'demo') {
+                this.demoMode = true;
+                this.baseURL = '/api/demo';
+            }
+        } catch (error) {
+            console.error('Error checking API mode:', error);
+        }
+    },
     
     async request(endpoint, options = {}) {
         try {

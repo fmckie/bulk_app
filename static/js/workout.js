@@ -6,6 +6,8 @@ let workoutData = [];
 let timerInterval = null;
 let timerSeconds = 180; // Default 3 minutes
 let audioContext = null;
+let API_MODE = 'production'; // Will be set to 'demo' if needed
+let API_PREFIX = '/api'; // Will be updated based on mode
 
 // Exercise data with strength standards multipliers
 const exerciseStandards = {
@@ -19,6 +21,7 @@ const exerciseStandards = {
 // Initialize on page load
 document.addEventListener('DOMContentLoaded', function() {
     initializeWorkout();
+    checkApiMode();
     loadLastWorkout();
     setupEventListeners();
 });
@@ -37,6 +40,32 @@ function initializeWorkout() {
 
     // Initialize audio context for timer sound
     audioContext = new (window.AudioContext || window.webkitAudioContext)();
+}
+
+async function checkApiMode() {
+    // Check if we're in demo mode by calling health endpoint
+    try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        if (data.mode === 'demo') {
+            API_MODE = 'demo';
+            API_PREFIX = '/api/demo';
+            console.log('Running in DEMO mode');
+            
+            // Show demo mode indicator
+            const header = document.querySelector('.workout-header');
+            if (header) {
+                const demoIndicator = document.createElement('div');
+                demoIndicator.className = 'demo-indicator';
+                demoIndicator.innerHTML = '🔧 Demo Mode - No login required';
+                demoIndicator.style.cssText = 'background: #ff9800; color: white; padding: 8px 16px; border-radius: 4px; margin-bottom: 16px; text-align: center;';
+                header.appendChild(demoIndicator);
+            }
+        }
+    } catch (error) {
+        console.error('Error checking API mode:', error);
+    }
 }
 
 function setupEventListeners() {
