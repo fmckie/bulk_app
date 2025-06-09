@@ -1,0 +1,698 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kinobody Greek God Program</title>
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.css">
+</head>
+<body>
+    <div class="mobile-app">
+        <!-- Header -->
+        <header class="app-header">
+            <div class="header-content">
+                <h1 class="app-title">Kinobody</h1>
+                <button id="theme-toggle" class="theme-btn">🌙</button>
+            </div>
+        </header>
+
+        <!-- Main Content Container -->
+        <main class="app-main">
+            <!-- Dashboard Screen -->
+            <section id="dashboard" class="screen active">
+                <div class="screen-content">
+                    <!-- User Profile Card -->
+                    <div class="profile-card card">
+                        <div class="profile-header">
+                            <div class="profile-info">
+                                <h2>Welcome back!</h2>
+                                <p class="user-stats">Age 23 • 6'5" • 85kg → 90kg</p>
+                            </div>
+                            <div class="profile-progress">
+                                <div class="progress-circle">
+                                    <span class="progress-text">0%</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Today's Summary -->
+                    <div class="today-summary">
+                        <h3>Today - <span id="current-date">Monday, June 9</span></h3>
+                        <div class="summary-cards">
+                            <div class="summary-card">
+                                <div class="card-icon">💪</div>
+                                <div class="card-content">
+                                    <span class="card-label">Workout</span>
+                                    <span class="card-value" id="today-workout">Workout A</span>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon">🔥</div>
+                                <div class="card-content">
+                                    <span class="card-label">Calories</span>
+                                    <span class="card-value" id="today-calories">3,300</span>
+                                </div>
+                            </div>
+                            <div class="summary-card">
+                                <div class="card-icon">⏱️</div>
+                                <div class="card-content">
+                                    <span class="card-label">Fasting</span>
+                                    <span class="card-value" id="fasting-status">2h left</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <button class="action-btn primary" data-screen="workouts">
+                            <span class="btn-icon">💪</span>
+                            <span>Start Workout</span>
+                        </button>
+                        <button class="action-btn secondary" data-screen="nutrition">
+                            <span class="btn-icon">🍎</span>
+                            <span>Log Food</span>
+                        </button>
+                    </div>
+
+                    <!-- Stats Overview -->
+                    <div class="stats-overview">
+                        <h3>This Week</h3>
+                        <div class="stats-grid">
+                            <div class="stat-item">
+                                <span class="stat-value">2/3</span>
+                                <span class="stat-label">Workouts</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">95%</span>
+                                <span class="stat-label">Nutrition</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">+0.3kg</span>
+                                <span class="stat-label">Weight</span>
+                            </div>
+                            <div class="stat-item">
+                                <span class="stat-value">7</span>
+                                <span class="stat-label">Streak</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Workouts Screen -->
+            <section id="workouts" class="screen">
+                <div class="screen-content">
+                    <!-- Workout Selector -->
+                    <div class="workout-selector">
+                        <button class="workout-btn active" data-workout="A">
+                            <div class="workout-info">
+                                <h3>Workout A</h3>
+                                <p>Chest, Shoulders, Triceps</p>
+                            </div>
+                            <div class="workout-status">Today</div>
+                        </button>
+                        <button class="workout-btn" data-workout="B">
+                            <div class="workout-info">
+                                <h3>Workout B</h3>
+                                <p>Back, Biceps, Legs</p>
+                            </div>
+                            <div class="workout-status">Wednesday</div>
+                        </button>
+                    </div>
+
+                    <!-- Active Workout -->
+                    <div id="workout-content">
+                        <!-- Workout A Exercises -->
+                        <div id="workout-A" class="workout-exercises active">
+                            <div class="exercise-progress">
+                                <span class="exercise-counter">Exercise <span id="current-exercise">1</span> of <span id="total-exercises">5</span></span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 20%"></div>
+                                </div>
+                            </div>
+
+                            <div class="exercise-carousel">
+                                <div class="exercise-card active" data-exercise="0">
+                                    <div class="exercise-header">
+                                        <h3>Incline Barbell Bench Press</h3>
+                                        <span class="exercise-type">RPT: 5, 6, 8 reps</span>
+                                    </div>
+                                    
+                                    <div class="exercise-sets">
+                                        <div class="set-input">
+                                            <div class="set-label">Set 1 (5 reps)</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 2 (6 reps) - 10% less</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 3 (8 reps) - 10% less</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timer-section">
+                                        <div class="timer-display">
+                                            <span class="timer-text" id="timer-display">3:00</span>
+                                            <span class="timer-label">Rest Time</span>
+                                        </div>
+                                        <div class="timer-controls">
+                                            <button class="timer-btn" id="start-timer">Start</button>
+                                            <button class="timer-btn" id="reset-timer">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="exercise-card" data-exercise="1">
+                                    <div class="exercise-header">
+                                        <h3>Standing Barbell Shoulder Press</h3>
+                                        <span class="exercise-type">RPT: 5, 6, 8 reps</span>
+                                    </div>
+                                    
+                                    <div class="exercise-sets">
+                                        <div class="set-input">
+                                            <div class="set-label">Set 1 (5 reps)</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 2 (6 reps) - 10% less</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 3 (8 reps) - 10% less</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timer-section">
+                                        <div class="timer-display">
+                                            <span class="timer-text">3:00</span>
+                                            <span class="timer-label">Rest Time</span>
+                                        </div>
+                                        <div class="timer-controls">
+                                            <button class="timer-btn">Start</button>
+                                            <button class="timer-btn">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="exercise-card" data-exercise="2">
+                                    <div class="exercise-header">
+                                        <h3>Weighted Dips</h3>
+                                        <span class="exercise-type">3 sets of 6-10 reps</span>
+                                    </div>
+                                    
+                                    <div class="exercise-sets">
+                                        <div class="set-input">
+                                            <div class="set-label">Set 1</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 2</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 3</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timer-section">
+                                        <div class="timer-display">
+                                            <span class="timer-text">2:00</span>
+                                            <span class="timer-label">Rest Time</span>
+                                        </div>
+                                        <div class="timer-controls">
+                                            <button class="timer-btn">Start</button>
+                                            <button class="timer-btn">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="exercise-card" data-exercise="3">
+                                    <div class="exercise-header">
+                                        <h3>Lateral Raises</h3>
+                                        <span class="exercise-type">3 sets of 12-15 reps</span>
+                                    </div>
+                                    
+                                    <div class="exercise-sets">
+                                        <div class="set-input">
+                                            <div class="set-label">Set 1</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 2</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 3</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timer-section">
+                                        <div class="timer-display">
+                                            <span class="timer-text">1:30</span>
+                                            <span class="timer-label">Rest Time</span>
+                                        </div>
+                                        <div class="timer-controls">
+                                            <button class="timer-btn">Start</button>
+                                            <button class="timer-btn">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+
+                                <div class="exercise-card" data-exercise="4">
+                                    <div class="exercise-header">
+                                        <h3>Rope Tricep Pushdowns</h3>
+                                        <span class="exercise-type">3 sets of 12 reps</span>
+                                    </div>
+                                    
+                                    <div class="exercise-sets">
+                                        <div class="set-input">
+                                            <div class="set-label">Set 1</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 2</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 3</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="timer-section">
+                                        <div class="timer-display">
+                                            <span class="timer-text">1:30</span>
+                                            <span class="timer-label">Rest Time</span>
+                                        </div>
+                                        <div class="timer-controls">
+                                            <button class="timer-btn">Start</button>
+                                            <button class="timer-btn">Reset</button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="exercise-navigation">
+                                <button class="nav-btn" id="prev-exercise" disabled>← Previous</button>
+                                <button class="nav-btn primary" id="next-exercise">Next →</button>
+                            </div>
+                        </div>
+
+                        <!-- Workout B Exercises -->
+                        <div id="workout-B" class="workout-exercises">
+                            <div class="exercise-progress">
+                                <span class="exercise-counter">Exercise 1 of 5</span>
+                                <div class="progress-bar">
+                                    <div class="progress-fill" style="width: 20%"></div>
+                                </div>
+                            </div>
+
+                            <div class="exercise-carousel">
+                                <div class="exercise-card active" data-exercise="0">
+                                    <div class="exercise-header">
+                                        <h3>Weighted Chin-Ups</h3>
+                                        <span class="exercise-type">RPT: 5, 6, 8 reps</span>
+                                    </div>
+                                    
+                                    <div class="exercise-sets">
+                                        <div class="set-input">
+                                            <div class="set-label">Set 1 (5 reps)</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 2 (6 reps) - 10% less</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                        <div class="set-input">
+                                            <div class="set-label">Set 3 (8 reps) - 10% less</div>
+                                            <div class="weight-reps-input">
+                                                <input type="number" placeholder="Weight" class="weight-input">
+                                                <span>kg</span>
+                                                <input type="number" placeholder="Reps" class="reps-input">
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="exercise-navigation">
+                                <button class="nav-btn" disabled>← Previous</button>
+                                <button class="nav-btn primary">Next →</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Workout Complete Button -->
+                    <div class="workout-complete">
+                        <button class="action-btn success" id="complete-workout">
+                            <span class="btn-icon">✅</span>
+                            <span>Complete Workout</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Nutrition Screen -->
+            <section id="nutrition" class="screen">
+                <div class="screen-content">
+                    <!-- Day Type Selector -->
+                    <div class="day-type-selector">
+                        <button class="day-btn active" data-type="training">Training Day</button>
+                        <button class="day-btn" data-type="rest">Rest Day</button>
+                    </div>
+
+                    <!-- Macro Overview -->
+                    <div class="macro-overview">
+                        <div class="macro-ring">
+                            <div class="ring-container">
+                                <svg class="progress-ring" width="120" height="120">
+                                    <circle class="progress-ring-circle" cx="60" cy="60" r="54"></circle>
+                                </svg>
+                                <div class="ring-text">
+                                    <span class="calories-consumed" id="calories-consumed">0</span>
+                                    <span class="calories-total">/ 3300</span>
+                                </div>
+                            </div>
+                            <span class="macro-label">Calories</span>
+                        </div>
+
+                        <div class="macro-bars">
+                            <div class="macro-item">
+                                <div class="macro-header">
+                                    <span class="macro-name">Protein</span>
+                                    <span class="macro-values"><span id="protein-consumed">0</span>g / 200g</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill protein" id="protein-progress"></div>
+                                </div>
+                            </div>
+                            <div class="macro-item">
+                                <div class="macro-header">
+                                    <span class="macro-name">Carbs</span>
+                                    <span class="macro-values"><span id="carbs-consumed">0</span>g / 400g</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill carbs" id="carbs-progress"></div>
+                                </div>
+                            </div>
+                            <div class="macro-item">
+                                <div class="macro-header">
+                                    <span class="macro-name">Fats</span>
+                                    <span class="macro-values"><span id="fats-consumed">0</span>g / 80g</span>
+                                </div>
+                                <div class="progress-bar">
+                                    <div class="progress-fill fats" id="fats-progress"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Fasting Timer -->
+                    <div class="fasting-timer card">
+                        <div class="fasting-header">
+                            <h3>Intermittent Fasting</h3>
+                            <span class="fasting-protocol">16:8 (12PM-8PM)</span>
+                        </div>
+                        <div class="fasting-status">
+                            <div class="fasting-time">
+                                <span class="time-left" id="fasting-time">2:15:30</span>
+                                <span class="time-label" id="fasting-label">until eating window</span>
+                            </div>
+                            <div class="fasting-progress">
+                                <div class="progress-bar">
+                                    <div class="progress-fill" id="fasting-progress-bar" style="width: 65%"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Add Foods -->
+                    <div class="quick-foods">
+                        <h3>Quick Add</h3>
+                        <div class="food-buttons">
+                            <button class="food-btn" data-food="protein-shake">
+                                <span class="food-icon">🥤</span>
+                                <span class="food-name">Protein Shake</span>
+                                <span class="food-cals">150 cal</span>
+                            </button>
+                            <button class="food-btn" data-food="banana">
+                                <span class="food-icon">🍌</span>
+                                <span class="food-name">Banana</span>
+                                <span class="food-cals">105 cal</span>
+                            </button>
+                            <button class="food-btn" data-food="chicken-breast">
+                                <span class="food-icon">🍗</span>
+                                <span class="food-name">Chicken 100g</span>
+                                <span class="food-cals">165 cal</span>
+                            </button>
+                            <button class="food-btn" data-food="rice">
+                                <span class="food-icon">🍚</span>
+                                <span class="food-name">Rice 100g</span>
+                                <span class="food-cals">130 cal</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Add Custom Food -->
+                    <div class="add-food card">
+                        <h3>Add Food</h3>
+                        <div class="food-form">
+                            <input type="text" placeholder="Food name" class="food-input" id="food-name">
+                            <div class="macro-inputs">
+                                <input type="number" placeholder="Calories" class="macro-input" id="food-calories">
+                                <input type="number" placeholder="Protein (g)" class="macro-input" id="food-protein">
+                                <input type="number" placeholder="Carbs (g)" class="macro-input" id="food-carbs">
+                                <input type="number" placeholder="Fats (g)" class="macro-input" id="food-fats">
+                            </div>
+                            <button class="action-btn primary" id="add-food">Add Food</button>
+                        </div>
+                    </div>
+
+                    <!-- Today's Meals -->
+                    <div class="meals-log">
+                        <h3>Today's Meals</h3>
+                        <div class="meals-list" id="meals-list">
+                            <div class="empty-meals">
+                                <span class="empty-icon">🍽️</span>
+                                <p>No meals logged yet</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Screen -->
+            <section id="progress" class="screen">
+                <div class="screen-content">
+                    <!-- Weight Progress -->
+                    <div class="weight-progress card">
+                        <h3>Weight Progress</h3>
+                        <div class="weight-chart-container">
+                            <canvas id="weight-chart" height="200"></canvas>
+                        </div>
+                        <div class="weight-form">
+                            <div class="weight-input-row">
+                                <input type="number" placeholder="Enter weight (kg)" class="weight-input" id="weight-input" step="0.1">
+                                <button class="action-btn primary" id="log-weight">Log Weight</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Body Measurements -->
+                    <div class="measurements card">
+                        <h3>Body Measurements</h3>
+                        <div class="measurement-form">
+                            <div class="measurement-inputs">
+                                <input type="number" placeholder="Waist (cm)" class="measurement-input" id="waist-input" step="0.1">
+                                <input type="number" placeholder="Chest (cm)" class="measurement-input" id="chest-input" step="0.1">
+                                <input type="number" placeholder="Arms (cm)" class="measurement-input" id="arms-input" step="0.1">
+                            </div>
+                            <button class="action-btn secondary" id="log-measurements">Log Measurements</button>
+                        </div>
+                    </div>
+
+                    <!-- Strength Progress -->
+                    <div class="strength-progress card">
+                        <h3>Strength Progress</h3>
+                        <div class="exercise-selector">
+                            <button class="exercise-btn active" data-exercise="bench">Incline Bench</button>
+                            <button class="exercise-btn" data-exercise="chinup">Chin-ups</button>
+                        </div>
+                        <div class="strength-chart-container">
+                            <canvas id="strength-chart" height="200"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Kinobody Standards -->
+                    <div class="standards card">
+                        <h3>Greek God Standards</h3>
+                        <div class="standards-list">
+                            <div class="standard-item">
+                                <div class="standard-header">
+                                    <span class="standard-name">Incline Bench Press</span>
+                                    <span class="standard-best">Best: 75kg</span>
+                                </div>
+                                <div class="standard-levels">
+                                    <div class="level">
+                                        <span class="level-name">Good</span>
+                                        <span class="level-target">85kg (1x BW)</span>
+                                        <div class="level-progress">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 88%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="standard-item">
+                                <div class="standard-header">
+                                    <span class="standard-name">Weighted Chin-ups</span>
+                                    <span class="standard-best">Best: +15kg</span>
+                                </div>
+                                <div class="standard-levels">
+                                    <div class="level">
+                                        <span class="level-name">Good</span>
+                                        <span class="level-target">25.5kg (30% BW)</span>
+                                        <div class="level-progress">
+                                            <div class="progress-bar">
+                                                <div class="progress-fill" style="width: 59%"></div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Bottom Navigation -->
+        <nav class="bottom-nav">
+            <button class="nav-item active" data-screen="dashboard">
+                <span class="nav-icon">🏠</span>
+                <span class="nav-label">Dashboard</span>
+            </button>
+            <button class="nav-item" data-screen="workouts">
+                <span class="nav-icon">💪</span>
+                <span class="nav-label">Workouts</span>
+            </button>
+            <button class="nav-item" data-screen="nutrition">
+                <span class="nav-icon">🍎</span>
+                <span class="nav-label">Nutrition</span>
+            </button>
+            <button class="nav-item" data-screen="progress">
+                <span class="nav-icon">📈</span>
+                <span class="nav-label">Progress</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- Workout Complete Modal -->
+    <div id="workout-complete-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Workout Complete! 🎉</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="completion-stats">
+                    <div class="stat">
+                        <span class="stat-value">5</span>
+                        <span class="stat-label">Exercises</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">15</span>
+                        <span class="stat-label">Sets</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-value">45</span>
+                        <span class="stat-label">Minutes</span>
+                    </div>
+                </div>
+                <p>Great job! Keep up the consistency to reach your Greek God physique.</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>

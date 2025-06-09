@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Allowed to access and edit files within the folder"
+    ],
+    "deny": []
+  }
+
+  
+}
