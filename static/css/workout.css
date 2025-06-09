@@ -1,0 +1,394 @@
+/* Workout Page Specific Styles */
+
+.workout-container {
+    max-width: 600px;
+    margin: 0 auto;
+    padding: 20px;
+    padding-bottom: 100px; /* Space for bottom nav */
+}
+
+.workout-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+
+.workout-header h1 {
+    color: var(--primary-color);
+    margin-bottom: 10px;
+}
+
+.workout-date {
+    color: var(--text-secondary);
+    font-size: 14px;
+}
+
+/* Exercise Selection */
+.exercise-selection {
+    margin-bottom: 20px;
+}
+
+.exercise-categories {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.category-btn {
+    flex: 1;
+    padding: 8px 15px;
+    background: var(--surface-color);
+    border: 1px solid var(--surface-light);
+    color: var(--text-secondary);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.category-btn.active {
+    background: var(--primary-color);
+    color: white;
+    border-color: var(--primary-color);
+}
+
+.exercise-dropdown {
+    width: 100%;
+    padding: 12px;
+    background: var(--surface-color);
+    border: 1px solid var(--surface-light);
+    color: var(--text-primary);
+    border-radius: 5px;
+    font-size: 16px;
+}
+
+.last-workout-info {
+    margin-top: 15px;
+    padding: 10px;
+    background: var(--surface-light);
+    border-radius: 5px;
+    font-size: 14px;
+}
+
+.pr-indicator {
+    color: var(--primary-color);
+    font-weight: bold;
+}
+
+/* Warm-up Calculator */
+.warmup-calculator {
+    margin-bottom: 20px;
+}
+
+.warmup-input {
+    display: flex;
+    gap: 10px;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.warmup-input label {
+    flex-shrink: 0;
+}
+
+.warmup-input .weight-input {
+    flex: 1;
+}
+
+.warmup-sets {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.warmup-set {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: var(--surface-light);
+    border-radius: 5px;
+}
+
+.warmup-label {
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* RPT Sets */
+.rpt-sets {
+    margin-bottom: 20px;
+}
+
+.rpt-set {
+    margin-bottom: 15px;
+    transition: all 0.3s ease;
+}
+
+.rpt-set.disabled {
+    opacity: 0.5;
+    pointer-events: none;
+}
+
+.rpt-set.completed {
+    border: 2px solid var(--success-color);
+}
+
+.set-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.set-header h4 {
+    color: var(--primary-color);
+    font-size: 16px;
+    margin: 0;
+}
+
+.set-status {
+    font-size: 12px;
+    padding: 4px 10px;
+    border-radius: 15px;
+    font-weight: bold;
+}
+
+.set-status:has-text("PENDING") {
+    background: var(--warning-color);
+    color: white;
+}
+
+.set-status:has-text("LOCKED") {
+    background: var(--surface-light);
+    color: var(--text-secondary);
+}
+
+.set-status:has-text("COMPLETED") {
+    background: var(--success-color);
+    color: white;
+}
+
+.set-inputs {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.input-group {
+    flex: 1;
+}
+
+.input-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+.weight-input,
+.reps-input {
+    width: 100%;
+    padding: 12px;
+    background: var(--surface-color);
+    border: 2px solid var(--surface-light);
+    color: var(--text-primary);
+    border-radius: 5px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
+}
+
+.weight-input:focus,
+.reps-input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+}
+
+/* Rest Timer */
+.rest-timer {
+    margin-bottom: 20px;
+    text-align: center;
+}
+
+.timer-display {
+    font-size: 48px;
+    font-weight: bold;
+    color: var(--primary-color);
+    margin: 20px 0;
+    font-family: 'Courier New', monospace;
+}
+
+.timer-controls {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+    margin-bottom: 15px;
+}
+
+.timer-controls button {
+    flex: 1;
+    max-width: 120px;
+}
+
+.timer-presets {
+    display: flex;
+    gap: 10px;
+    justify-content: center;
+}
+
+.preset-btn {
+    padding: 8px 15px;
+    background: var(--surface-light);
+    border: none;
+    color: var(--text-primary);
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.preset-btn:hover {
+    background: var(--primary-color);
+    color: white;
+}
+
+/* Strength Standards */
+.strength-standards {
+    margin-bottom: 20px;
+}
+
+.standards-info {
+    text-align: center;
+    margin-bottom: 15px;
+    color: var(--text-secondary);
+}
+
+.standards-levels {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.standard-level {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    background: var(--surface-light);
+    border-radius: 5px;
+}
+
+.level-label {
+    font-weight: bold;
+}
+
+.level-label.good {
+    color: #4CAF50;
+}
+
+.level-label.great {
+    color: #2196F3;
+}
+
+.level-label.godlike {
+    color: #FF9800;
+}
+
+.current-level {
+    text-align: center;
+    font-size: 18px;
+    font-weight: bold;
+    color: var(--primary-color);
+}
+
+/* Workout Actions */
+.workout-actions {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 20px;
+}
+
+.btn-large {
+    padding: 15px 30px;
+    font-size: 18px;
+    font-weight: bold;
+}
+
+.btn-success {
+    background: var(--success-color);
+    color: white;
+    border: none;
+    padding: 12px 24px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: all 0.3s ease;
+}
+
+.btn-success:hover {
+    background: #45a049;
+    transform: translateY(-2px);
+}
+
+/* Workout Summary */
+.workout-summary {
+    margin-bottom: 20px;
+}
+
+.exercise-item {
+    padding: 15px;
+    background: var(--surface-light);
+    border-radius: 5px;
+    margin-bottom: 10px;
+}
+
+.exercise-name {
+    font-weight: bold;
+    color: var(--primary-color);
+    margin-bottom: 5px;
+}
+
+.exercise-sets {
+    font-size: 14px;
+    color: var(--text-secondary);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+    .workout-container {
+        padding: 15px;
+    }
+
+    .timer-display {
+        font-size: 36px;
+    }
+
+    .input-group label {
+        font-size: 12px;
+    }
+
+    .weight-input,
+    .reps-input {
+        font-size: 16px;
+        padding: 10px;
+    }
+
+    .btn-large {
+        padding: 12px 20px;
+        font-size: 16px;
+    }
+}
+
+/* Timer animation */
+@keyframes pulse {
+    0% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+}
+
+.timer-display.active {
+    animation: pulse 1s infinite;
+    color: var(--error-color);
+}
+
+/* Hidden utility */
+.hidden {
+    display: none !important;
+}

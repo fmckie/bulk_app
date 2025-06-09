@@ -1,0 +1,208 @@
+{% extends "base.html" %}
+
+{% block title %}Workout - Kinobody Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/workout.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="workout-container">
+    <!-- Workout Header -->
+    <div class="workout-header">
+        <h1>RPT Workout</h1>
+        <div class="workout-date">{{ current_date }}</div>
+    </div>
+
+    <!-- Exercise Selection -->
+    <div class="exercise-selection card">
+        <h2>Select Exercise</h2>
+        <div class="exercise-categories">
+            <button class="category-btn active" data-category="all">All</button>
+            <button class="category-btn" data-category="indicator">Indicator</button>
+            <button class="category-btn" data-category="assistance">Assistance</button>
+        </div>
+        
+        <select id="exercise-select" class="exercise-dropdown">
+            <option value="">Choose an exercise...</option>
+            <optgroup label="Indicator Exercises">
+                <option value="incline-bench" data-category="indicator">Incline Barbell Bench Press</option>
+                <option value="standing-press" data-category="indicator">Standing Shoulder Press</option>
+                <option value="weighted-chins" data-category="indicator">Weighted Chin-ups</option>
+                <option value="power-cleans" data-category="indicator">Power Cleans (Hang)</option>
+            </optgroup>
+            <optgroup label="Assistance - Chest & Triceps">
+                <option value="weighted-dips" data-category="assistance">Weighted Dips</option>
+                <option value="close-grip-bench" data-category="assistance">Close Grip Bench Press</option>
+                <option value="skull-crushers" data-category="assistance">Skull Crushers</option>
+                <option value="rope-extensions" data-category="assistance">Rope Extensions</option>
+            </optgroup>
+            <optgroup label="Assistance - Back & Biceps">
+                <option value="barbell-curls" data-category="assistance">Barbell Curls</option>
+                <option value="incline-db-curls" data-category="assistance">Incline Dumbbell Curls</option>
+                <option value="cable-rows" data-category="assistance">Cable Rows</option>
+            </optgroup>
+            <optgroup label="Assistance - Shoulders">
+                <option value="lateral-raises" data-category="assistance">Lateral Raises</option>
+                <option value="bent-over-flyes" data-category="assistance">Bent Over Flyes</option>
+            </optgroup>
+            <optgroup label="Assistance - Legs">
+                <option value="pistol-squats" data-category="assistance">Pistol Squats</option>
+                <option value="calf-raises" data-category="assistance">Single Leg Calf Raises</option>
+            </optgroup>
+        </select>
+
+        <!-- Last Workout Info -->
+        <div id="last-workout-info" class="last-workout-info hidden">
+            <p>Last time: <span id="last-weight">0</span> lbs × <span id="last-reps">0</span> reps</p>
+            <p class="pr-indicator hidden">Personal Record: <span id="pr-weight">0</span> lbs</p>
+        </div>
+    </div>
+
+    <!-- Warm-up Calculator -->
+    <div id="warmup-section" class="warmup-calculator card hidden">
+        <h3>Warm-up Sets</h3>
+        <div class="warmup-input">
+            <label>Working Weight (lbs):</label>
+            <input type="number" id="working-weight" class="weight-input" placeholder="Enter weight">
+            <button id="calculate-warmup" class="btn-secondary">Calculate</button>
+        </div>
+        <div id="warmup-sets" class="warmup-sets hidden">
+            <div class="warmup-set">
+                <span class="warmup-label">60%:</span>
+                <span class="warmup-weight"></span> × 5 reps
+            </div>
+            <div class="warmup-set">
+                <span class="warmup-label">75%:</span>
+                <span class="warmup-weight"></span> × 3 reps
+            </div>
+            <div class="warmup-set">
+                <span class="warmup-label">90%:</span>
+                <span class="warmup-weight"></span> × 1 rep
+            </div>
+        </div>
+    </div>
+
+    <!-- RPT Sets -->
+    <div id="rpt-sets" class="rpt-sets hidden">
+        <h3>Reverse Pyramid Training</h3>
+        
+        <!-- Set 1 - Heavy Set -->
+        <div class="rpt-set card" data-set="1">
+            <div class="set-header">
+                <h4>Set 1 - Heavy Set (4-8 reps)</h4>
+                <span class="set-status">PENDING</span>
+            </div>
+            <div class="set-inputs">
+                <div class="input-group">
+                    <label>Weight (lbs)</label>
+                    <input type="number" class="weight-input set-weight" data-set="1" placeholder="0">
+                </div>
+                <div class="input-group">
+                    <label>Reps</label>
+                    <input type="number" class="reps-input set-reps" data-set="1" placeholder="0" min="1" max="20">
+                </div>
+            </div>
+            <button class="btn-primary complete-set" data-set="1">Complete Set</button>
+        </div>
+
+        <!-- Set 2 - -10% -->
+        <div class="rpt-set card disabled" data-set="2">
+            <div class="set-header">
+                <h4>Set 2 - 90% of Set 1 (+1-2 reps)</h4>
+                <span class="set-status">LOCKED</span>
+            </div>
+            <div class="set-inputs">
+                <div class="input-group">
+                    <label>Weight (lbs)</label>
+                    <input type="number" class="weight-input set-weight" data-set="2" placeholder="0" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Reps</label>
+                    <input type="number" class="reps-input set-reps" data-set="2" placeholder="0" min="1" max="20" disabled>
+                </div>
+            </div>
+            <button class="btn-primary complete-set" data-set="2" disabled>Complete Set</button>
+        </div>
+
+        <!-- Set 3 - -20% -->
+        <div class="rpt-set card disabled" data-set="3">
+            <div class="set-header">
+                <h4>Set 3 - 80% of Set 1 (+2-4 reps)</h4>
+                <span class="set-status">LOCKED</span>
+            </div>
+            <div class="set-inputs">
+                <div class="input-group">
+                    <label>Weight (lbs)</label>
+                    <input type="number" class="weight-input set-weight" data-set="3" placeholder="0" readonly>
+                </div>
+                <div class="input-group">
+                    <label>Reps</label>
+                    <input type="number" class="reps-input set-reps" data-set="3" placeholder="0" min="1" max="20" disabled>
+                </div>
+            </div>
+            <button class="btn-primary complete-set" data-set="3" disabled>Complete Set</button>
+        </div>
+    </div>
+
+    <!-- Rest Timer -->
+    <div id="rest-timer" class="rest-timer card hidden">
+        <h3>Rest Timer</h3>
+        <div class="timer-display">
+            <span id="timer-minutes">3</span>:<span id="timer-seconds">00</span>
+        </div>
+        <div class="timer-controls">
+            <button id="start-timer" class="btn-primary">Start Rest</button>
+            <button id="stop-timer" class="btn-secondary hidden">Stop</button>
+            <button id="reset-timer" class="btn-secondary">Reset</button>
+        </div>
+        <div class="timer-presets">
+            <button class="preset-btn" data-time="180">3:00</button>
+            <button class="preset-btn" data-time="240">4:00</button>
+            <button class="preset-btn" data-time="300">5:00</button>
+            <button class="preset-btn" data-time="60">1:00</button>
+        </div>
+    </div>
+
+    <!-- Strength Standards -->
+    <div id="strength-standards" class="strength-standards card hidden">
+        <h3>Strength Standards</h3>
+        <div class="standards-info">
+            <p>Your weight: <span id="user-weight">180</span> lbs</p>
+        </div>
+        <div class="standards-levels">
+            <div class="standard-level">
+                <span class="level-label good">Good:</span>
+                <span class="level-weight" id="standard-good">--</span> lbs
+            </div>
+            <div class="standard-level">
+                <span class="level-label great">Great:</span>
+                <span class="level-weight" id="standard-great">--</span> lbs
+            </div>
+            <div class="standard-level">
+                <span class="level-label godlike">Godlike:</span>
+                <span class="level-weight" id="standard-godlike">--</span> lbs
+            </div>
+        </div>
+        <div class="current-level">
+            Your Level: <span id="current-level-text">--</span>
+        </div>
+    </div>
+
+    <!-- Save Workout -->
+    <div class="workout-actions">
+        <button id="save-exercise" class="btn-primary btn-large hidden">Save Exercise</button>
+        <button id="finish-workout" class="btn-success btn-large hidden">Finish Workout</button>
+    </div>
+
+    <!-- Workout Summary -->
+    <div id="workout-summary" class="workout-summary card hidden">
+        <h3>Today's Workout</h3>
+        <div id="exercise-list"></div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/workout.js') }}"></script>
+{% endblock %}
