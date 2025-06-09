@@ -108,6 +108,103 @@ git push origin main
 - **Supabase Integration**: PostgreSQL database with authentication
 - **API Design**: RESTful endpoints for workouts, nutrition, measurements, and progress tracking
 
+## Supabase Database & Authentication
+
+### Primary Database
+Supabase serves as the main database for all user data:
+- **User Authentication**: Built-in OAuth providers (Google, GitHub, email/password)
+- **Personal Data Storage**: All workout history, nutrition logs, and progress tracking
+- **Row Level Security (RLS)**: Ensures users can only access their own data
+- **Real-time Subscriptions**: Live updates for collaborative features
+
+### Authentication Setup
+```python
+from supabase import create_client, Client
+
+# Initialize Supabase client
+supabase: Client = create_client(
+    "https://YOUR-PROJECT.supabase.co",
+    "YOUR-ANON-KEY"
+)
+
+# User sign up with email
+def sign_up_user(email, password):
+    response = supabase.auth.sign_up({
+        "email": email,
+        "password": password
+    })
+    return response.user
+
+# User sign in
+def sign_in_user(email, password):
+    response = supabase.auth.sign_in_with_password({
+        "email": email,
+        "password": password
+    })
+    return response.session
+
+# OAuth sign in (Google, GitHub, etc.)
+def oauth_sign_in(provider):
+    response = supabase.auth.sign_in_with_oauth({
+        "provider": provider  # "google", "github", etc.
+    })
+    return response.url
+```
+
+### Data Access Functions
+```python
+# Get authenticated user
+def get_current_user(token):
+    supabase.auth.set_session(token)
+    return supabase.auth.get_user()
+
+# Store workout data
+def save_workout(user_id, workout_data):
+    response = supabase.table('workouts').insert({
+        'user_id': user_id,
+        'date': workout_data['date'],
+        'exercises': workout_data['exercises'],
+        'notes': workout_data['notes']
+    }).execute()
+    return response.data
+
+# Fetch user's nutrition history
+def get_nutrition_history(user_id, start_date=None):
+    query = supabase.table('nutrition').select('*').eq('user_id', user_id)
+    if start_date:
+        query = query.gte('date', start_date)
+    response = query.order('date', desc=True).execute()
+    return response.data
+
+# Update user measurements
+def update_measurements(user_id, measurements):
+    response = supabase.table('measurements').upsert({
+        'user_id': user_id,
+        'date': measurements['date'],
+        'weight': measurements['weight'],
+        'body_fat': measurements.get('body_fat'),
+        'measurements': measurements.get('body_measurements')
+    }).execute()
+    return response.data
+```
+
+### Row Level Security (RLS) Policies
+```sql
+-- Users can only view their own data
+CREATE POLICY "Users can view own workouts" ON workouts
+    FOR SELECT USING (auth.uid() = user_id);
+
+-- Users can only insert their own data
+CREATE POLICY "Users can insert own workouts" ON workouts
+    FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+-- Users can only update their own data
+CREATE POLICY "Users can update own workouts" ON workouts
+    FOR UPDATE USING (auth.uid() = user_id);
+
+-- Apply similar policies to all tables
+```
+
 ### Frontend Structure
 - **app/**: Production-ready static files
 - **MD-Pilot-mobile-tracker (example)/**: Development version with example implementation
@@ -125,12 +222,34 @@ git push origin main
 
 ## Database Schema
 
-The application uses Supabase with tables for:
-- `users`: User profiles and authentication
-- `workouts`: Exercise logs with RPT methodology
-- `nutrition`: Daily calorie and macro tracking
-- `measurements`: Body measurements and progress photos
-- `exercises`: Exercise library with standards
+Supabase PostgreSQL database serves as the primary data store with the following tables:
+
+### Core Tables
+- **`users`**: User profiles linked to Supabase Auth
+  - Stores profile data, preferences, and program settings
+  - Automatically created on OAuth/email signup
+  
+- **`workouts`**: Exercise session logs
+  - Complete workout history with RPT sets/reps/weights
+  - Linked to user_id for data isolation
+  
+- **`nutrition`**: Daily nutrition tracking
+  - Calories, protein, carbs, fats per day
+  - Supports calorie cycling patterns
+  
+- **`measurements`**: Body composition tracking
+  - Weight, body fat %, measurements
+  - Progress photos with secure storage
+  
+- **`exercises`**: Exercise library
+  - Pre-populated with Kinobody exercises
+  - Personal records and strength standards
+
+### Data Privacy
+- All user data is isolated using Row Level Security (RLS)
+- Users can only access their own data
+- OAuth tokens expire and refresh automatically
+- No data sharing between users
 
 ## Upstash Redis Caching
 
