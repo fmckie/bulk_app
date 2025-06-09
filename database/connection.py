@@ -20,13 +20,27 @@ try:
     key = os.getenv('SUPABASE_KEY', '')
     
     if url and key:
-        supabase: Client = create_client(url, key)
-        logger.info("Supabase client initialized successfully")
+        # Try creating client with just positional arguments
+        try:
+            supabase: Client = create_client(url, key)
+            logger.info("Supabase client initialized successfully")
+        except Exception as e:
+            # If that fails, try with keyword arguments
+            logger.warning(f"First attempt failed: {str(e)}, trying alternative method")
+            supabase: Client = create_client(
+                supabase_url=url,
+                supabase_key=key
+            )
+            logger.info("Supabase client initialized with keyword arguments")
     else:
         logger.error("Missing Supabase URL or KEY")
         supabase = None
 except Exception as e:
     logger.error(f"Failed to initialize Supabase client: {str(e)}")
+    logger.error(f"Error type: {type(e).__name__}")
+    logger.error(f"Error args: {e.args}")
+    import traceback
+    logger.error(f"Traceback: {traceback.format_exc()}")
     supabase = None
 
 

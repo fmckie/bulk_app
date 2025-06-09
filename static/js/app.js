@@ -1,8 +1,67 @@
+// Authentication State Management
+const Auth = {
+    isAuthenticated() {
+        return localStorage.getItem('isAuthenticated') === 'true';
+    },
+    
+    getUser() {
+        const user = localStorage.getItem('user');
+        return user ? JSON.parse(user) : null;
+    },
+    
+    setAuth(user) {
+        localStorage.setItem('isAuthenticated', 'true');
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user));
+        }
+    },
+    
+    clearAuth() {
+        localStorage.removeItem('isAuthenticated');
+        localStorage.removeItem('user');
+    },
+    
+    requireAuth() {
+        if (!this.isAuthenticated()) {
+            window.location.href = `/login?return=${encodeURIComponent(window.location.pathname)}`;
+            return false;
+        }
+        return true;
+    },
+    
+    async checkSession() {
+        try {
+            const response = await fetch('/api/auth/user');
+            if (response.ok) {
+                const data = await response.json();
+                this.setAuth(data);
+                return true;
+            } else if (response.status === 401) {
+                this.clearAuth();
+                return false;
+            }
+        } catch (error) {
+            console.error('Session check failed:', error);
+            return false;
+        }
+    }
+};
+
 // Initialize API mode check
 API.checkMode();
 
+// Check authentication on protected pages
+const protectedPaths = ['/workout', '/nutrition', '/progress', '/profile', '/measurements'];
+if (protectedPaths.includes(window.location.pathname)) {
+    Auth.requireAuth();
+}
+
 // Mobile Navigation Toggle
 document.addEventListener('DOMContentLoaded', function() {
+    // Check session on page load
+    if (Auth.isAuthenticated()) {
+        Auth.checkSession();
+    }
     const navToggle = document.getElementById('navToggle');
     const mobileMenu = document.getElementById('mobileMenu');
     
@@ -241,6 +300,7 @@ function showNotification(message, type = 'success') {
 window.KinobodyApp = {
     API,
     Storage,
+    Auth,
     showNotification,
     formatDate
 };

@@ -33,6 +33,87 @@ demo_prs = {
     'weighted-chins': {'weight': 90, 'reps': 5, 'date': '2024-01-01'}
 }
 
+# Demo user for testing
+demo_user = {
+    'id': 'demo-user-123',
+    'email': 'wfmckie@gmail.com',
+    'password': '123456',  # In real app, this would be hashed
+    'profile': {
+        'username': 'willmckie',
+        'full_name': 'Will McKie',
+        'body_weight': 175
+    }
+}
+
+@demo_bp.route('/auth/signin', methods=['POST'])
+def demo_signin():
+    """Sign in a user (demo mode)"""
+    try:
+        data = request.json
+        email = data.get('email')
+        password = data.get('password')
+        
+        # Check demo credentials
+        if email == demo_user['email'] and password == demo_user['password']:
+            from flask import session
+            # Store in session
+            session['access_token'] = 'demo-token-123'
+            session['user_email'] = email
+            session['demo_mode'] = True
+            
+            return jsonify({
+                'success': True,
+                'message': 'Signed in successfully (demo mode)',
+                'user': {
+                    'id': demo_user['id'],
+                    'email': demo_user['email']
+                }
+            })
+        else:
+            return jsonify({'error': 'Invalid email or password'}), 401
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@demo_bp.route('/auth/signup', methods=['POST'])
+def demo_signup():
+    """Sign up a new user (demo mode)"""
+    try:
+        data = request.json
+        
+        # In demo mode, just pretend to create user
+        return jsonify({
+            'success': True,
+            'message': 'Account created successfully (demo mode)',
+            'user': {
+                'id': str(uuid.uuid4()),
+                'email': data.get('email')
+            }
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@demo_bp.route('/auth/signout', methods=['POST'])
+def demo_signout():
+    """Sign out the current user (demo mode)"""
+    from flask import session
+    session.clear()
+    return jsonify({
+        'success': True,
+        'message': 'Signed out successfully'
+    })
+
+@demo_bp.route('/auth/user', methods=['GET'])
+def demo_get_user():
+    """Get current user info (demo mode)"""
+    from flask import session
+    if session.get('demo_mode'):
+        return jsonify({
+            'id': demo_user['id'],
+            'profile': demo_user['profile']
+        })
+    else:
+        return jsonify({'error': 'Authentication required'}), 401
+
 @demo_bp.route('/workouts', methods=['POST'])
 def demo_log_workout():
     """Save a workout session (demo mode)"""
@@ -129,28 +210,3 @@ def demo_get_exercises():
 def demo_get_personal_records():
     """Get personal records (demo mode)"""
     return jsonify(demo_prs)
-
-@demo_bp.route('/auth/signin', methods=['POST'])
-def demo_signin():
-    """Demo sign in (no real authentication)"""
-    return jsonify({
-        'success': True,
-        'message': 'Demo mode - no authentication required',
-        'user': {
-            'id': 'demo-user',
-            'email': 'demo@kinobody.com'
-        }
-    })
-
-@demo_bp.route('/auth/user', methods=['GET'])
-def demo_get_user():
-    """Get demo user info"""
-    return jsonify({
-        'id': 'demo-user',
-        'profile': {
-            'email': 'demo@kinobody.com',
-            'username': 'demo_user',
-            'full_name': 'Demo User',
-            'body_weight': 180
-        }
-    })

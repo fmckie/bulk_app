@@ -74,6 +74,34 @@ def test_endpoint():
         'version': '1.0.0'
     })
 
+# Authentication Page Routes
+@app.route('/login')
+def login():
+    """Login page"""
+    # If already logged in, redirect to home
+    if 'access_token' in session:
+        return redirect(url_for('index'))
+    return render_template('login.html')
+
+@app.route('/register')
+def register():
+    """Registration page"""
+    # If already logged in, redirect to home
+    if 'access_token' in session:
+        return redirect(url_for('index'))
+    return render_template('register.html')
+
+@app.route('/password-reset')
+def password_reset():
+    """Password reset page"""
+    return render_template('password-reset.html')
+
+@app.route('/logout')
+def logout():
+    """Logout and redirect to home"""
+    session.clear()
+    return redirect(url_for('index'))
+
 # Page Routes
 @app.route('/workout')
 def workout():
@@ -103,6 +131,8 @@ def measurements():
 
 # API Routes for Workout
 if not DEMO_MODE:
+    from auth import login_required, get_current_user_id, AuthService
+    
     @app.route('/api/workouts', methods=['POST'])
     @login_required
     def log_workout():
@@ -159,53 +189,53 @@ if not DEMO_MODE:
             logger.error(f"Error logging workout: {str(e)}")
             return jsonify({'error': str(e)}), 400
 
-@app.route('/api/workouts/recent', methods=['GET'])
-@login_required
-def get_recent_workouts():
-    """Get recent workout history"""
-    try:
-        user_id = get_current_user_id()
-        limit = request.args.get('limit', 10, type=int)
-        
-        workouts = WorkoutDB.get_recent_workouts(user_id, limit)
-        
-        # Format the response
-        formatted_workouts = []
-        for workout in workouts:
-            formatted_workout = {
-                'id': workout['id'],
-                'date': workout['date'],
-                'notes': workout.get('notes', ''),
-                'exercises': []
-            }
+    @app.route('/api/workouts/recent', methods=['GET'])
+    @login_required
+    def get_recent_workouts():
+        """Get recent workout history"""
+        try:
+            user_id = get_current_user_id()
+            limit = request.args.get('limit', 10, type=int)
             
-            # Group sets by exercise
-            exercise_sets = {}
-            for set_data in workout.get('workout_sets', []):
-                exercise_name = set_data['exercises']['name']
-                exercise_slug = set_data['exercises']['slug']
-                
-                if exercise_slug not in exercise_sets:
-                    exercise_sets[exercise_slug] = {
-                        'name': exercise_name,
-                        'slug': exercise_slug,
-                        'sets': []
-                    }
-                
-                exercise_sets[exercise_slug]['sets'].append({
-                    'set_number': set_data['set_number'],
-                    'weight': float(set_data['weight']),
-                    'reps': set_data['reps'],
-                    'rpe': float(set_data['rpe']) if set_data.get('rpe') else None
-                })
+            workouts = WorkoutDB.get_recent_workouts(user_id, limit)
             
-            formatted_workout['exercises'] = list(exercise_sets.values())
-            formatted_workouts.append(formatted_workout)
-        
-        return jsonify(formatted_workouts)
-    except Exception as e:
-        logger.error(f"Error getting recent workouts: {str(e)}")
-        return jsonify({'error': str(e)}), 500
+            # Format the response
+            formatted_workouts = []
+            for workout in workouts:
+                formatted_workout = {
+                    'id': workout['id'],
+                    'date': workout['date'],
+                    'notes': workout.get('notes', ''),
+                    'exercises': []
+                }
+                
+                # Group sets by exercise
+                exercise_sets = {}
+                for set_data in workout.get('workout_sets', []):
+                    exercise_name = set_data['exercises']['name']
+                    exercise_slug = set_data['exercises']['slug']
+                    
+                    if exercise_slug not in exercise_sets:
+                        exercise_sets[exercise_slug] = {
+                            'name': exercise_name,
+                            'slug': exercise_slug,
+                            'sets': []
+                        }
+                    
+                    exercise_sets[exercise_slug]['sets'].append({
+                        'set_number': set_data['set_number'],
+                        'weight': float(set_data['weight']),
+                        'reps': set_data['reps'],
+                        'rpe': float(set_data['rpe']) if set_data.get('rpe') else None
+                    })
+                
+                formatted_workout['exercises'] = list(exercise_sets.values())
+                formatted_workouts.append(formatted_workout)
+            
+            return jsonify(formatted_workouts)
+        except Exception as e:
+            logger.error(f"Error getting recent workouts: {str(e)}")
+            return jsonify({'error': str(e)}), 500
 
 @app.route('/api/exercises', methods=['GET'])
 def get_exercises():
@@ -291,6 +321,9 @@ def calculate_warmup():
 @app.route('/api/auth/signup', methods=['POST'])
 def signup():
     """Sign up a new user"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Authentication requires Supabase configuration. Please use demo mode or configure Supabase.'}), 503
+    
     try:
         data = request.json
         email = data.get('email')
@@ -332,6 +365,9 @@ def signup():
 @app.route('/api/auth/signin', methods=['POST'])
 def signin():
     """Sign in a user"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Authentication requires Supabase configuration. Please use demo mode or configure Supabase.'}), 503
+    
     try:
         data = request.json
         email = data.get('email')
@@ -366,6 +402,10 @@ def signin():
 @app.route('/api/auth/signout', methods=['POST'])
 def signout():
     """Sign out the current user"""
+    if DEMO_MODE:
+        session.clear()
+        return jsonify({'success': True, 'message': 'Signed out successfully'})
+    
     try:
         token = session.get('access_token')
         result = AuthService.sign_out(token)
@@ -382,20 +422,134 @@ def signout():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/auth/user', methods=['GET'])
-@login_required
 def get_user():
     """Get current user info"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Authentication requires Supabase configuration.'}), 503
+    
+    # Apply login_required decorator conditionally
+    from auth import login_required, get_current_user_id, ProfileDB
+    
+    @login_required
+    def _get_user_impl():
+        try:
+            user_id = get_current_user_id()
+            profile = ProfileDB.get_profile(user_id)
+            
+            return jsonify({
+                'id': user_id,
+                'profile': profile
+            })
+        except Exception as e:
+            logger.error(f"Get user error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _get_user_impl()
+
+@app.route('/api/auth/reset-password', methods=['POST'])
+def request_password_reset():
+    """Request a password reset email"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Password reset requires Supabase configuration.'}), 503
+    
     try:
-        user_id = get_current_user_id()
-        profile = ProfileDB.get_profile(user_id)
+        data = request.json
+        email = data.get('email')
         
-        return jsonify({
-            'id': user_id,
-            'profile': profile
-        })
+        if not email:
+            return jsonify({'error': 'Email is required'}), 400
+        
+        # Generate reset token and send email
+        # Note: This requires email service configuration
+        from database.connection import supabase
+        
+        # Check if user exists
+        result = supabase.table('profiles').select('*').eq('email', email).execute()
+        
+        if result.data:
+            # In production, generate token and send email
+            # For now, we'll just return success
+            logger.info(f"Password reset requested for: {email}")
+            
+            # TODO: Implement email service
+            # - Generate secure token
+            # - Store token with expiration
+            # - Send email with reset link
+            
+            return jsonify({
+                'success': True,
+                'message': 'If an account exists with this email, you will receive reset instructions'
+            })
+        else:
+            # Return same message to prevent email enumeration
+            return jsonify({
+                'success': True,
+                'message': 'If an account exists with this email, you will receive reset instructions'
+            })
+            
     except Exception as e:
-        logger.error(f"Get user error: {str(e)}")
+        logger.error(f"Password reset request error: {str(e)}")
+        return jsonify({'error': 'An error occurred processing your request'}), 500
+
+@app.route('/api/auth/reset-password/confirm', methods=['POST'])
+def confirm_password_reset():
+    """Confirm password reset with token"""
+    try:
+        data = request.json
+        token = data.get('token')
+        new_password = data.get('password')
+        
+        if not token or not new_password:
+            return jsonify({'error': 'Token and password are required'}), 400
+        
+        # TODO: Implement token validation and password update
+        # - Verify token is valid and not expired
+        # - Update user password
+        # - Invalidate token
+        
+        # For now, return error as not implemented
+        return jsonify({
+            'error': 'Password reset functionality requires email service configuration'
+        }), 501
+        
+    except Exception as e:
+        logger.error(f"Password reset confirm error: {str(e)}")
+        return jsonify({'error': 'An error occurred resetting your password'}), 500
+
+@app.route('/api/auth/oauth/<provider>', methods=['GET'])
+def get_oauth_url(provider):
+    """Get OAuth provider URL"""
+    if DEMO_MODE:
+        return jsonify({'error': 'OAuth authentication requires Supabase configuration.'}), 503
+    
+    try:
+        if provider not in ['google', 'github']:
+            return jsonify({'error': 'Invalid provider'}), 400
+        
+        result = AuthService.get_oauth_url(provider)
+        
+        if result['success']:
+            return jsonify({
+                'success': True,
+                'url': result['url']
+            })
+        else:
+            return jsonify({'error': result['error']}), 400
+            
+    except Exception as e:
+        logger.error(f"OAuth URL error: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/auth/callback')
+def auth_callback():
+    """Handle OAuth callback"""
+    try:
+        # Get the access token from URL hash (handled client-side)
+        # Redirect to home with success message
+        return redirect(url_for('index', auth='success'))
+    except Exception as e:
+        logger.error(f"Auth callback error: {str(e)}")
+        return redirect(url_for('login', error='auth_failed'))
 
 # Error handlers
 @app.errorhandler(404)
