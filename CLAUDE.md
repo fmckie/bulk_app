@@ -345,6 +345,93 @@ redis-cli -u redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT flushall
 - Python backend should handle Supabase authentication and data sync
 - Local Storage provides offline functionality when backend is unavailable
 
+## Puppeteer Visual Testing
+
+### Setup Puppeteer MCP for Testing
+```javascript
+// Visual testing for new features
+async function testFeatureVisually(feature) {
+    // Navigate to local development
+    await mcp__puppeteer__puppeteer_navigate({
+        url: "http://localhost:8000/app/"
+    });
+    
+    // Take before screenshot
+    await mcp__puppeteer__puppeteer_screenshot({
+        name: `${feature}_before`,
+        width: 425,  // Mobile width
+        height: 800
+    });
+    
+    // Test feature interactions
+    // Example: Test workout logging
+    await mcp__puppeteer__puppeteer_click({
+        selector: "#log-workout-btn"
+    });
+    
+    await mcp__puppeteer__puppeteer_fill({
+        selector: "#exercise-weight",
+        value: "185"
+    });
+    
+    // Take after screenshot
+    await mcp__puppeteer__puppeteer_screenshot({
+        name: `${feature}_after`,
+        width: 425,
+        height: 800
+    });
+}
+```
+
+### Visual Test Checklist
+1. **Mobile Responsiveness**: Test at 425px width
+2. **Form Interactions**: Test all input fields
+3. **Navigation Flow**: Test menu and page transitions
+4. **Data Display**: Verify charts and progress displays
+5. **PWA Features**: Test offline mode and app installation
+
+## Kinobody Program Knowledge Base
+
+### Source Document
+The `sources/kinobody.md` file contains the complete Greek God Program methodology and should be used as the authoritative source for:
+
+### Key Program Principles
+- **Reverse Pyramid Training (RPT)**: Primary training methodology
+- **Indicator Exercises**: Core lifts for strength progression
+- **Assistance Movements**: Supporting exercises for muscle development
+- **Strength Standards**: Target weights relative to body weight
+- **Training Frequency**: 3 days per week optimal schedule
+
+### Nutrition Guidelines from Kinobody
+- **Intermittent Fasting**: 16:8 protocol recommended
+- **Calorie Cycling**: Higher calories on training days
+- **Protein Targets**: Based on lean body mass
+- **Strategic Carb/Fat Distribution**: Optimized for muscle growth
+
+### Implementation Notes
+When building features, always reference `sources/kinobody.md` for:
+- Exercise selection and programming
+- Set/rep schemes for RPT
+- Progression protocols
+- Nutrition calculations
+- Recovery recommendations
+
+### Example Usage
+```python
+# Load Kinobody principles
+def load_kinobody_config():
+    with open('sources/kinobody.md', 'r') as f:
+        kinobody_text = f.read()
+    
+    # Extract key metrics
+    # - Indicator exercises
+    # - RPT protocols
+    # - Strength standards
+    # - Nutrition guidelines
+    
+    return kinobody_config
+```
+
 ## Deployment Checklist
 
 1. **Local Testing**
