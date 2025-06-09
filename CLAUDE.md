@@ -132,6 +132,92 @@ The application uses Supabase with tables for:
 - `measurements`: Body measurements and progress photos
 - `exercises`: Exercise library with standards
 
+## Upstash Redis Caching
+
+### Setup
+```python
+# Initialize Upstash Redis client
+import redis
+from upstash_redis import Redis
+
+# Connect using REST API
+redis_client = Redis(
+    url="https://YOUR-ENDPOINT.upstash.io",
+    token="YOUR-UPSTASH-TOKEN"
+)
+```
+
+### Common Caching Functions
+```python
+# Cache user data
+def cache_user_data(user_id, data, ttl=3600):
+    """Cache user data with 1 hour TTL"""
+    key = f"user:{user_id}"
+    redis_client.setex(key, ttl, json.dumps(data))
+
+# Cache workout sessions
+def cache_workout(user_id, workout_id, data, ttl=86400):
+    """Cache workout data with 24 hour TTL"""
+    key = f"workout:{user_id}:{workout_id}"
+    redis_client.setex(key, ttl, json.dumps(data))
+
+# Cache nutrition data
+def cache_nutrition(user_id, date, data, ttl=86400):
+    """Cache daily nutrition with 24 hour TTL"""
+    key = f"nutrition:{user_id}:{date}"
+    redis_client.setex(key, ttl, json.dumps(data))
+
+# Cache progress calculations
+def cache_progress_stats(user_id, stats, ttl=3600):
+    """Cache calculated progress stats with 1 hour TTL"""
+    key = f"progress:{user_id}"
+    redis_client.setex(key, ttl, json.dumps(stats))
+
+# Get cached data with fallback
+def get_cached_or_fetch(key, fetch_function):
+    """Get from cache or fetch from database"""
+    cached = redis_client.get(key)
+    if cached:
+        return json.loads(cached)
+    
+    # Fetch from database
+    data = fetch_function()
+    redis_client.setex(key, 3600, json.dumps(data))
+    return data
+
+# Invalidate cache patterns
+def invalidate_user_cache(user_id):
+    """Invalidate all user-related cache"""
+    patterns = [
+        f"user:{user_id}",
+        f"workout:{user_id}:*",
+        f"nutrition:{user_id}:*",
+        f"progress:{user_id}"
+    ]
+    for pattern in patterns:
+        for key in redis_client.scan_iter(match=pattern):
+            redis_client.delete(key)
+```
+
+### Cache Strategy
+- **User profiles**: 1 hour TTL
+- **Workout data**: 24 hour TTL
+- **Nutrition logs**: 24 hour TTL  
+- **Progress stats**: 1 hour TTL (frequently recalculated)
+- **Exercise library**: 7 day TTL (rarely changes)
+
+### Redis Commands for Development
+```bash
+# Test Redis connection
+redis-cli -u redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT ping
+
+# Monitor cache hits/misses
+redis-cli -u redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT monitor
+
+# Clear all cache (development only)
+redis-cli -u redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT flushall
+```
+
 ## Development Notes
 
 - The app is designed as a mobile-first PWA optimized for 425px+ width
