@@ -240,6 +240,9 @@ if not DEMO_MODE:
 @app.route('/api/exercises', methods=['GET'])
 def get_exercises():
     """Get list of exercises"""
+    if DEMO_MODE:
+        return redirect('/api/demo/exercises')
+    
     try:
         all_exercises = ExerciseDB.get_all_exercises()
         
@@ -269,9 +272,13 @@ def get_exercises():
         return jsonify({'error': str(e)}), 500
 
 @app.route('/api/personal-records', methods=['GET'])
-@login_required
 def get_personal_records():
     """Get personal records for exercises"""
+    if DEMO_MODE:
+        return redirect('/api/demo/personal-records')
+    
+    from auth import login_required, get_current_user_id
+    
     try:
         user_id = get_current_user_id()
         
@@ -316,6 +323,138 @@ def calculate_warmup():
         return jsonify(warmup_sets)
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+# Nutrition API Routes
+@app.route('/api/nutrition', methods=['POST'])
+def save_nutrition():
+    """Save daily nutrition data"""
+    if DEMO_MODE:
+        return redirect('/api/demo/nutrition', code=307)  # 307 preserves POST method
+    
+    from auth import login_required, get_current_user_id
+    user_id = get_current_user_id()
+    data = request.json
+    
+    date = data.get('date', datetime.now().date().isoformat())
+    
+    # Check if workout exists for this date to determine if it's a training day
+    workout = WorkoutDB.get_workout_by_date(user_id, date)
+    is_training_day = workout is not None
+    
+    nutrition_data = {
+        'calories': data.get('calories'),
+        'protein_g': data.get('protein'),
+        'carbs_g': data.get('carbs'),
+        'fats_g': data.get('fats'),
+        'notes': data.get('notes', ''),
+        'is_training_day': is_training_day
+    }
+    
+    result = NutritionDB.log_nutrition(user_id, date, nutrition_data)
+    
+    return jsonify({
+        'status': 'success',
+        'message': 'Nutrition data saved successfully',
+        'data': result
+    })
+
+@app.route('/api/nutrition/<date>', methods=['GET'])
+def get_nutrition(date):
+    """Get nutrition data for a specific date"""
+    if DEMO_MODE:
+        return redirect(f'/api/demo/nutrition/{date}')
+    
+    from auth import login_required, get_current_user_id
+    user_id = get_current_user_id()
+    
+    nutrition = NutritionDB.get_nutrition_by_date(user_id, date)
+    
+    if nutrition:
+        # Also check if it's a training day
+        workout = WorkoutDB.get_workout_by_date(user_id, date)
+        nutrition['is_training_day'] = workout is not None
+        
+        return jsonify(nutrition)
+    else:
+        # Check if it's a training day even if no nutrition logged
+        workout = WorkoutDB.get_workout_by_date(user_id, date)
+        return jsonify({
+            'date': date,
+            'is_training_day': workout is not None,
+            'calories': None,
+            'protein_g': None,
+            'carbs_g': None,
+            'fats_g': None
+        })
+
+@app.route('/api/nutrition/history', methods=['GET'])
+def get_nutrition_history():
+    """Get nutrition history"""
+    if DEMO_MODE:
+        return redirect('/api/demo/nutrition/history')
+    
+    from auth import login_required, get_current_user_id
+    user_id = get_current_user_id()
+    days = request.args.get('days', 7, type=int)
+    
+    history = NutritionDB.get_nutrition_history(user_id, days)
+    
+    # Add training day info to each entry
+    for entry in history:
+        workout = WorkoutDB.get_workout_by_date(user_id, entry['date'])
+        entry['is_training_day'] = workout is not None
+    
+    return jsonify(history)
+
+@app.route('/api/nutrition/targets', methods=['GET'])
+def get_nutrition_targets():
+    """Calculate daily nutrition targets based on user profile and workout schedule"""
+    if DEMO_MODE:
+        return redirect('/api/demo/nutrition/targets')
+    
+    from auth import login_required, get_current_user_id
+    user_id = get_current_user_id()
+    date = request.args.get('date', datetime.now().date().isoformat())
+    
+    # Get user profile for body weight
+    profile = ProfileDB.get_profile(user_id)
+    if not profile or not profile.get('body_weight'):
+        return jsonify({
+            'error': 'Please update your body weight in your profile to calculate targets'
+        }), 400
+    
+    body_weight = float(profile['body_weight'])
+    
+    # Check if today is a training day
+    workout = WorkoutDB.get_workout_by_date(user_id, date)
+    is_training_day = workout is not None
+    
+    # Calculate targets based on Kinobody protocol
+    maintenance = body_weight * 15  # 15 calories per pound
+    
+    if is_training_day:
+        calories = maintenance + 500  # +500 on training days
+    else:
+        calories = maintenance + 100  # +100 on rest days
+    
+    # Macro calculations
+    protein = body_weight * 1.0  # 1g per lb body weight (Kinobody recommendation)
+    fats = calories * 0.25 / 9  # 25% of calories from fats (9 cal per gram)
+    carbs = (calories - (protein * 4) - (fats * 9)) / 4  # Remaining calories from carbs
+    
+    return jsonify({
+        'is_training_day': is_training_day,
+        'body_weight': body_weight,
+        'maintenance_calories': round(maintenance),
+        'targets': {
+            'calories': round(calories),
+            'protein': round(protein),
+            'carbs': round(carbs),
+            'fats': round(fats)
+        },
+        'calorie_surplus': round(calories - maintenance)
+    })
+
 
 # Authentication Routes
 @app.route('/api/auth/signup', methods=['POST'])

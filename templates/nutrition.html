@@ -1,0 +1,181 @@
+{% extends "base.html" %}
+
+{% block title %}Nutrition Tracking - Kinobody Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/nutrition.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>Nutrition Tracking</h1>
+        <p class="subtitle">{{ current_date }}</p>
+    </div>
+
+    <!-- Date Navigation -->
+    <div class="date-navigation">
+        <button class="btn-icon" id="prevDay">
+            <i class="fas fa-chevron-left"></i>
+        </button>
+        <input type="date" id="dateInput" class="date-input" value="{{ today }}">
+        <button class="btn-icon" id="nextDay">
+            <i class="fas fa-chevron-right"></i>
+        </button>
+    </div>
+
+    <!-- Training Day Indicator -->
+    <div class="training-indicator" id="trainingIndicator">
+        <span class="indicator-badge">
+            <i class="fas fa-dumbbell"></i>
+            <span id="dayType">Loading...</span>
+        </span>
+    </div>
+
+    <!-- Daily Targets -->
+    <div class="targets-card">
+        <h2>Daily Targets</h2>
+        <div class="targets-grid">
+            <div class="target-item">
+                <span class="target-label">Calories</span>
+                <div class="progress-bar">
+                    <div class="progress-fill calories" id="caloriesProgress"></div>
+                </div>
+                <span class="target-numbers">
+                    <span id="currentCalories">0</span> / <span id="targetCalories">-</span>
+                </span>
+            </div>
+            <div class="target-item">
+                <span class="target-label">Protein</span>
+                <div class="progress-bar">
+                    <div class="progress-fill protein" id="proteinProgress"></div>
+                </div>
+                <span class="target-numbers">
+                    <span id="currentProtein">0</span>g / <span id="targetProtein">-</span>g
+                </span>
+            </div>
+            <div class="target-item">
+                <span class="target-label">Carbs</span>
+                <div class="progress-bar">
+                    <div class="progress-fill carbs" id="carbsProgress"></div>
+                </div>
+                <span class="target-numbers">
+                    <span id="currentCarbs">0</span>g / <span id="targetCarbs">-</span>g
+                </span>
+            </div>
+            <div class="target-item">
+                <span class="target-label">Fats</span>
+                <div class="progress-bar">
+                    <div class="progress-fill fats" id="fatsProgress"></div>
+                </div>
+                <span class="target-numbers">
+                    <span id="currentFats">0</span>g / <span id="targetFats">-</span>g
+                </span>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Add Section -->
+    <div class="quick-add-section">
+        <h3>Quick Add</h3>
+        <div class="quick-add-grid">
+            <button class="quick-add-btn" data-calories="300" data-protein="30" data-carbs="5" data-fats="18">
+                <i class="fas fa-drumstick-bite"></i>
+                <span>Chicken Breast</span>
+                <small>300 cal</small>
+            </button>
+            <button class="quick-add-btn" data-calories="200" data-protein="7" data-carbs="40" data-fats="1">
+                <i class="fas fa-bread-slice"></i>
+                <span>Rice (1 cup)</span>
+                <small>200 cal</small>
+            </button>
+            <button class="quick-add-btn" data-calories="150" data-protein="3" data-carbs="30" data-fats="0">
+                <i class="fas fa-apple-alt"></i>
+                <span>Large Apple</span>
+                <small>150 cal</small>
+            </button>
+            <button class="quick-add-btn" data-calories="180" data-protein="12" data-carbs="12" data-fats="8">
+                <i class="fas fa-cheese"></i>
+                <span>Greek Yogurt</span>
+                <small>180 cal</small>
+            </button>
+        </div>
+    </div>
+
+    <!-- Manual Entry Form -->
+    <form id="nutritionForm" class="nutrition-form">
+        <h3>Manual Entry</h3>
+        <div class="form-grid">
+            <div class="form-group">
+                <label for="manualCalories">Calories</label>
+                <input type="number" id="manualCalories" min="0" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label for="manualProtein">Protein (g)</label>
+                <input type="number" id="manualProtein" min="0" step="0.1" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label for="manualCarbs">Carbs (g)</label>
+                <input type="number" id="manualCarbs" min="0" step="0.1" placeholder="0">
+            </div>
+            <div class="form-group">
+                <label for="manualFats">Fats (g)</label>
+                <input type="number" id="manualFats" min="0" step="0.1" placeholder="0">
+            </div>
+        </div>
+        <div class="form-group">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes" rows="3" placeholder="Meal descriptions, timing, etc."></textarea>
+        </div>
+        <button type="submit" class="btn btn-primary">
+            <i class="fas fa-save"></i> Save Nutrition
+        </button>
+    </form>
+
+    <!-- Weekly Summary -->
+    <div class="weekly-summary">
+        <h3>7-Day Average</h3>
+        <div class="summary-stats">
+            <div class="stat-item">
+                <span class="stat-value" id="avgCalories">-</span>
+                <span class="stat-label">Avg Calories</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="avgProtein">-</span>
+                <span class="stat-label">Avg Protein</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value" id="weeklyDeficit">-</span>
+                <span class="stat-label">Weekly +/-</span>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Loading Overlay -->
+<div class="loading-overlay" id="loadingOverlay">
+    <div class="spinner"></div>
+</div>
+
+<!-- Success/Error Messages -->
+<div class="message-toast" id="messageToast"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+    // Set current date
+    const today = new Date().toISOString().split('T')[0];
+    document.getElementById('dateInput').value = today;
+    
+    // Pass current date to template
+    const currentDate = new Date().toLocaleDateString('en-US', { 
+        weekday: 'long', 
+        year: 'numeric', 
+        month: 'long', 
+        day: 'numeric' 
+    });
+    document.querySelector('.subtitle').textContent = currentDate;
+</script>
+<script src="{{ url_for('static', filename='js/nutrition.js') }}"></script>
+{% endblock %}

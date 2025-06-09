@@ -8,12 +8,17 @@
 :root {
     /* Colors */
     --primary-color: #4CAF50;
+    --primary: #4CAF50;
+    --primary-dark: #388E3C;
     --secondary-color: #2196F3;
     --dark-bg: #121212;
     --card-bg: #1e1e1e;
+    --surface: #1e1e1e;
     --text-primary: #ffffff;
+    --text: #ffffff;
     --text-secondary: #b0b0b0;
     --border-color: #333;
+    --border: #333;
     
     /* Spacing */
     --spacing-xs: 4px;
