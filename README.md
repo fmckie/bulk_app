@@ -26,11 +26,11 @@ A mobile-first web application designed specifically for tracking progress on th
 git clone https://github.com/yourusername/bulk_app.git
 cd bulk_app
 
-# Run with Python's built-in server
-python3 -m http.server 8000
+# Start Python backend server
+python3 app.py
 
-# Or use Node's http-server
-npx http-server -p 8000
+# Or for frontend development only
+python3 -m http.server 8000
 ```
 
 Then open http://localhost:8000/MD-Pilot-mobile-tracker%20(example)/
@@ -48,22 +48,32 @@ docker run -d -p 80:80 kinobody-tracker
 ## Tech Stack
 
 - **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+)
+- **Backend**: Python (Flask/FastAPI)
+- **Database**: Supabase (PostgreSQL with OAuth)
 - **Data Visualization**: Chart.js
-- **Storage**: Local Storage API
-- **Backend Integration**: Supabase (PostgreSQL, OAuth)
-- **Deployment**: Docker + DigitalOcean
+- **Storage**: Local Storage API (offline support)
+- **Deployment**: Docker (nginx:alpine) + DigitalOcean
 
 ## Project Structure
 
 ```
 bulk_app/
-├── MD-Pilot-mobile-tracker (example)/   # Main app files
+├── app/                                 # Production app directory
+│   ├── index.html
+│   ├── app.js
+│   └── style.css
+├── MD-Pilot-mobile-tracker (example)/   # Development/example version
 │   ├── index.html                       # App structure
 │   ├── app.js                          # Application logic
 │   └── style.css                       # Mobile-first styling
+├── sources/                            # Documentation sources
+│   └── kinobody.md                     # Program details
+├── CLAUDE.md                           # AI assistant guidance
 ├── MD-Pilot-mobile-app-docs.md         # Technical documentation
 ├── full dev & setup guide.md           # Deployment guide
-└── test_supabase_table.sql            # Database schema
+├── test_supabase_table.sql            # Database schema
+├── Dockerfile                          # Container configuration
+└── README.md                           # This file
 ```
 
 ## Documentation
