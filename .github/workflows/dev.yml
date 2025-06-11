@@ -1,0 +1,143 @@
+name: Development CI/CD
+
+on:
+  push:
+    branches: [ dev ]
+  pull_request:
+    branches: [ dev ]
+
+env:
+  DOCKER_REGISTRY: registry.digitalocean.com
+  IMAGE_NAME: kinobody-tracker
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kinobody_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8 black
+    
+    - name: Lint with flake8
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+    
+    - name: Format check with black
+      run: |
+        black --check .
+    
+    - name: Run tests
+      env:
+        FLASK_ENV: testing
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/kinobody_test
+        SUPABASE_URL: ${{ secrets.DEV_SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.DEV_SUPABASE_KEY }}
+        UPSTASH_REDIS_REST_URL: ${{ secrets.DEV_UPSTASH_URL }}
+        UPSTASH_REDIS_REST_TOKEN: ${{ secrets.DEV_UPSTASH_TOKEN }}
+      run: |
+        pytest -v --cov=. --cov-report=xml
+    
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    if: github.event_name == 'push'
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker image
+      run: docker build . -t $IMAGE_NAME:dev-${{ github.sha }}
+    
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    
+    - name: Log in to DigitalOcean Container Registry
+      run: doctl registry login
+    
+    - name: Tag image
+      run: |
+        docker tag $IMAGE_NAME:dev-${{ github.sha }} $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:dev-latest
+        docker tag $IMAGE_NAME:dev-${{ github.sha }} $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:dev-${{ github.sha }}
+    
+    - name: Push image to DigitalOcean Container Registry
+      run: |
+        docker push $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:dev-latest
+        docker push $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:dev-${{ github.sha }}
+    
+    - name: Deploy to DigitalOcean App Platform (Dev)
+      run: |
+        doctl apps update ${{ secrets.DEV_APP_ID }} --spec - <<EOF
+        name: kinobody-tracker-dev
+        region: nyc
+        services:
+        - name: web
+          image:
+            registry_type: DOCR
+            repository: $IMAGE_NAME
+            tag: dev-${{ github.sha }}
+          http_port: 8000
+          instance_count: 1
+          instance_size_slug: basic-xxs
+          routes:
+          - path: /
+          env_vars:
+          - key: FLASK_ENV
+            value: development
+          - key: ENVIRONMENT
+            value: development
+          - key: SUPABASE_URL
+            value: ${{ secrets.DEV_SUPABASE_URL }}
+            type: SECRET
+          - key: SUPABASE_KEY
+            value: ${{ secrets.DEV_SUPABASE_KEY }}
+            type: SECRET
+          - key: UPSTASH_REDIS_REST_URL
+            value: ${{ secrets.DEV_UPSTASH_URL }}
+            type: SECRET
+          - key: UPSTASH_REDIS_REST_TOKEN
+            value: ${{ secrets.DEV_UPSTASH_TOKEN }}
+            type: SECRET
+        EOF

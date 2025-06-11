@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MD Pilot - Health Analytics Dashboard</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-pilot.css') }}">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="pilot-dashboard">
+        <!-- Premium Navigation Header -->
+        <header class="nav-header">
+            <div class="nav-brand">
+                <svg class="brand-icon" width="32" height="32" viewBox="0 0 32 32">
+                    <path d="M16 2 L28 14 L28 18 L16 30 L4 18 L4 14 Z" fill="none" stroke="#FF6B35" stroke-width="2"/>
+                    <circle cx="16" cy="16" r="4" fill="#FF6B35"/>
+                </svg>
+                <h1 class="brand-text">MD PILOT</h1>
+            </div>
+            
+            <div class="nav-metrics">
+                <div class="metric-item">
+                    <span class="metric-label">Progress Score</span>
+                    <span class="metric-value">{{ progress_score|default('87') }}%</span>
+                </div>
+                <div class="metric-divider"></div>
+                <div class="metric-item">
+                    <span class="metric-label">Active Days</span>
+                    <span class="metric-value">{{ days_active|default('45') }}</span>
+                </div>
+            </div>
+            
+            <div class="nav-profile">
+                <div class="profile-info">
+                    <span class="profile-name">{{ username|default('J. Smith') }}</span>
+                    <span class="profile-tier">Premium Navigator</span>
+                </div>
+                <div class="profile-avatar">
+                    <span>{{ username|default('JS')|first|upper }}</span>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Analytics Grid -->
+        <main class="analytics-container">
+            <!-- Performance Metrics Section -->
+            <section class="metrics-panel">
+                <div class="panel-header">
+                    <h2>Performance Metrics</h2>
+                    <div class="time-selector">
+                        <button class="time-btn active">Week</button>
+                        <button class="time-btn">Month</button>
+                        <button class="time-btn">Quarter</button>
+                    </div>
+                </div>
+                
+                <div class="metrics-grid">
+                    <!-- Sophisticated Gauge Cards -->
+                    <div class="metric-card" id="strength-metric">
+                        <div class="metric-header">
+                            <h3>Strength Index</h3>
+                            <span class="metric-change positive">+12%</span>
+                        </div>
+                        <div class="gauge-container">
+                            <svg class="gauge-svg" viewBox="0 0 200 120">
+                                <defs>
+                                    <linearGradient id="strengthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#FF6B35;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f0f0f0" stroke-width="12"/>
+                                <path d="M 20 100 A 80 80 0 0 1 140 60" fill="none" stroke="url(#strengthGradient)" stroke-width="12" stroke-linecap="round"/>
+                            </svg>
+                            <div class="gauge-reading">
+                                <span class="gauge-number">{{ strength_score|default('245') }}</span>
+                                <span class="gauge-unit">lbs</span>
+                            </div>
+                        </div>
+                        <div class="metric-insight">
+                            <p>Above target by 15 lbs</p>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card" id="composition-metric">
+                        <div class="metric-header">
+                            <h3>Body Composition</h3>
+                            <span class="metric-change positive">-2.1%</span>
+                        </div>
+                        <div class="gauge-container">
+                            <svg class="gauge-svg" viewBox="0 0 200 120">
+                                <defs>
+                                    <linearGradient id="compositionGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#6BCF7F;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f0f0f0" stroke-width="12"/>
+                                <path d="M 20 100 A 80 80 0 0 1 120 45" fill="none" stroke="url(#compositionGradient)" stroke-width="12" stroke-linecap="round"/>
+                            </svg>
+                            <div class="gauge-reading">
+                                <span class="gauge-number">{{ body_fat|default('12.5') }}</span>
+                                <span class="gauge-unit">%</span>
+                            </div>
+                        </div>
+                        <div class="metric-insight">
+                            <p>Optimal range achieved</p>
+                        </div>
+                    </div>
+                    
+                    <div class="metric-card" id="consistency-metric">
+                        <div class="metric-header">
+                            <h3>Training Consistency</h3>
+                            <span class="metric-change neutral">±0%</span>
+                        </div>
+                        <div class="gauge-container">
+                            <svg class="gauge-svg" viewBox="0 0 200 120">
+                                <defs>
+                                    <linearGradient id="consistencyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                        <stop offset="0%" style="stop-color:#1a1a1a;stop-opacity:1" />
+                                        <stop offset="100%" style="stop-color:#FFD93D;stop-opacity:1" />
+                                    </linearGradient>
+                                </defs>
+                                <path d="M 20 100 A 80 80 0 0 1 180 100" fill="none" stroke="#f0f0f0" stroke-width="12"/>
+                                <path d="M 20 100 A 80 80 0 0 1 165 85" fill="none" stroke="url(#consistencyGradient)" stroke-width="12" stroke-linecap="round"/>
+                            </svg>
+                            <div class="gauge-reading">
+                                <span class="gauge-number">{{ consistency|default('94') }}</span>
+                                <span class="gauge-unit">%</span>
+                            </div>
+                        </div>
+                        <div class="metric-insight">
+                            <p>21 day streak active</p>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Today's Focus -->
+            <section class="focus-panel">
+                <div class="panel-header">
+                    <h2>Today's Focus</h2>
+                    <span class="date-label">{{ current_date|default('Monday, January 15') }}</span>
+                </div>
+                
+                <div class="focus-cards">
+                    <div class="focus-card primary">
+                        <div class="focus-icon">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <rect x="8" y="16" width="32" height="4" rx="2" fill="#FF6B35"/>
+                                <rect x="12" y="10" width="24" height="4" rx="2" fill="#FF6B35" opacity="0.6"/>
+                                <rect x="12" y="22" width="24" height="4" rx="2" fill="#FF6B35" opacity="0.6"/>
+                                <rect x="8" y="28" width="32" height="4" rx="2" fill="#FF6B35"/>
+                            </svg>
+                        </div>
+                        <div class="focus-content">
+                            <h3>Upper Body Power</h3>
+                            <p>Chest & Shoulders RPT Protocol</p>
+                            <div class="focus-stats">
+                                <span>5 exercises</span>
+                                <span class="dot">•</span>
+                                <span>45 min</span>
+                            </div>
+                        </div>
+                        <button class="focus-action">Begin Workout</button>
+                    </div>
+                    
+                    <div class="focus-card secondary">
+                        <div class="focus-icon">
+                            <svg width="48" height="48" viewBox="0 0 48 48">
+                                <circle cx="24" cy="24" r="16" fill="none" stroke="#FFD93D" stroke-width="3"/>
+                                <path d="M24 12 L24 24 L32 32" stroke="#FFD93D" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <div class="focus-content">
+                            <h3>Nutrition Target</h3>
+                            <p>Training Day Protocol</p>
+                            <div class="focus-stats">
+                                <span>2,450 cal</span>
+                                <span class="dot">•</span>
+                                <span>165g protein</span>
+                            </div>
+                        </div>
+                        <button class="focus-action secondary">Track Meals</button>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Progress Visualization -->
+            <section class="progress-panel">
+                <div class="panel-header">
+                    <h2>Progress Trajectory</h2>
+                    <div class="view-controls">
+                        <button class="view-btn active">Strength</button>
+                        <button class="view-btn">Composition</button>
+                        <button class="view-btn">Volume</button>
+                    </div>
+                </div>
+                
+                <div class="chart-container">
+                    <canvas id="progressChart"></canvas>
+                    <div class="chart-insights">
+                        <div class="insight-item">
+                            <div class="insight-indicator trending-up"></div>
+                            <span>15% increase in 30 days</span>
+                        </div>
+                        <div class="insight-item">
+                            <div class="insight-indicator on-track"></div>
+                            <span>On track for quarterly goal</span>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Quick Actions -->
+            <section class="actions-panel">
+                <h2 class="panel-title">Quick Actions</h2>
+                <div class="action-grid">
+                    <button class="action-card">
+                        <div class="action-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32">
+                                <path d="M8 16 L24 16 M12 12 L12 20 M20 12 L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span>Log Workout</span>
+                    </button>
+                    
+                    <button class="action-card">
+                        <div class="action-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32">
+                                <circle cx="16" cy="16" r="12" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <path d="M16 8 L16 16 L20 20" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                            </svg>
+                        </div>
+                        <span>Track Nutrition</span>
+                    </button>
+                    
+                    <button class="action-card">
+                        <div class="action-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32">
+                                <rect x="8" y="8" width="16" height="16" rx="2" fill="none" stroke="currentColor" stroke-width="2"/>
+                                <path d="M12 16 L16 16 M14 14 L14 18" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <span>Body Check-in</span>
+                    </button>
+                    
+                    <button class="action-card">
+                        <div class="action-icon">
+                            <svg width="32" height="32" viewBox="0 0 32 32">
+                                <path d="M8 12 L16 8 L24 12 L24 20 L16 24 L8 20 Z" fill="none" stroke="currentColor" stroke-width="2"/>
+                            </svg>
+                        </div>
+                        <span>View Reports</span>
+                    </button>
+                </div>
+            </section>
+
+            <!-- Intelligence Feed -->
+            <section class="intel-panel">
+                <div class="panel-header">
+                    <h2>Health Intelligence</h2>
+                    <a href="/articles" class="view-all">View All Articles →</a>
+                </div>
+                
+                <div class="intel-grid">
+                    <article class="intel-card featured">
+                        <div class="intel-badge">Featured</div>
+                        <h3>Optimizing Recovery Between Training Sessions</h3>
+                        <p>Latest research on maximizing muscle protein synthesis during rest periods...</p>
+                        <div class="intel-meta">
+                            <span>5 min read</span>
+                            <span class="dot">•</span>
+                            <span>Dr. Sarah Chen</span>
+                        </div>
+                    </article>
+                    
+                    <article class="intel-card">
+                        <h3>The Science of Calorie Cycling</h3>
+                        <p>Understanding metabolic flexibility for optimal body composition...</p>
+                        <div class="intel-meta">
+                            <span>3 min read</span>
+                        </div>
+                    </article>
+                    
+                    <article class="intel-card">
+                        <h3>RPT Protocol Deep Dive</h3>
+                        <p>Maximizing strength gains with reverse pyramid training methodology...</p>
+                        <div class="intel-meta">
+                            <span>4 min read</span>
+                        </div>
+                    </article>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="{{ url_for('static', filename='js/dashboard-pilot.js') }}"></script>
+</body>
+</html>

@@ -1,0 +1,16 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - FLASK_ENV=development
+      - FLASK_APP=app.py
+    env_file:
+      - .env
+    volumes:
+      - .:/app  # Mount current directory for hot reload
+    command: flask run --host=0.0.0.0 --port=8000 --debug
+    restart: unless-stopped

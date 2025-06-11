@@ -1,0 +1,253 @@
+{% extends "base.html" %}
+
+{% block title %}Forge of Gods - {{ super() }}{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/dashboard-epic.css') }}">
+{% endblock %}
+
+{% block content %}
+<!-- Parallax Background Container -->
+<div class="forge-container">
+    <!-- Animated Background Layers -->
+    <div class="parallax-layer temple-layer"></div>
+    <div class="parallax-layer torch-layer"></div>
+    <div class="parallax-layer particle-layer"></div>
+    
+    <!-- Main Dashboard Content -->
+    <div class="epic-dashboard">
+        <!-- Hero Header -->
+        <header class="warrior-header">
+            <h1 class="forge-title">
+                <span class="divine-text">FORGE OF GODS</span>
+                <span class="subtitle">Transform From Mortal to Divine</span>
+            </h1>
+            <div class="lightning-effect"></div>
+        </header>
+
+        <!-- Power Crystals Grid -->
+        <section class="power-crystals">
+            <!-- Strength Crystal -->
+            <div class="crystal-container strength-crystal" data-crystal="strength">
+                <div class="crystal-outer">
+                    <div class="crystal-inner">
+                        <div class="molten-lava"></div>
+                        <div class="crystal-content">
+                            <h3 class="crystal-title">STRENGTH</h3>
+                            <div class="crystal-value">
+                                <span class="main-stat">315</span>
+                                <span class="unit">LBS</span>
+                            </div>
+                            <div class="crystal-label">Incline Bench PR</div>
+                            <div class="power-bar">
+                                <div class="power-fill" style="width: 85%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="crystal-glow"></div>
+            </div>
+
+            <!-- Physique Stone -->
+            <div class="crystal-container physique-stone" data-crystal="physique">
+                <div class="crystal-outer">
+                    <div class="crystal-inner">
+                        <div class="ice-effect"></div>
+                        <div class="crystal-content">
+                            <h3 class="crystal-title">PHYSIQUE</h3>
+                            <div class="crystal-value">
+                                <span class="main-stat">8.5</span>
+                                <span class="unit">%</span>
+                            </div>
+                            <div class="crystal-label">Body Fat</div>
+                            <div class="power-bar">
+                                <div class="power-fill" style="width: 92%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="crystal-glow ice"></div>
+            </div>
+
+            <!-- Nutrition Orb -->
+            <div class="crystal-container nutrition-orb" data-crystal="nutrition">
+                <div class="crystal-outer">
+                    <div class="crystal-inner">
+                        <div class="energy-sphere"></div>
+                        <div class="crystal-content">
+                            <h3 class="crystal-title">NUTRITION</h3>
+                            <div class="crystal-value">
+                                <span class="main-stat">2,850</span>
+                                <span class="unit">KCAL</span>
+                            </div>
+                            <div class="crystal-label">Today's Fuel</div>
+                            <div class="power-bar">
+                                <div class="power-fill" style="width: 78%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="crystal-glow energy"></div>
+            </div>
+
+            <!-- Progress Flame -->
+            <div class="crystal-container progress-flame" data-crystal="progress">
+                <div class="crystal-outer">
+                    <div class="crystal-inner">
+                        <div class="divine-fire"></div>
+                        <div class="crystal-content">
+                            <h3 class="crystal-title">PROGRESS</h3>
+                            <div class="crystal-value">
+                                <span class="main-stat">73</span>
+                                <span class="unit">DAYS</span>
+                            </div>
+                            <div class="crystal-label">On The Path</div>
+                            <div class="power-bar">
+                                <div class="power-fill" style="width: 65%"></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="crystal-glow fire"></div>
+            </div>
+        </section>
+
+        <!-- Hero Journey Map -->
+        <section class="hero-journey">
+            <h2 class="section-title chiseled-text">PATH OF ASCENSION</h2>
+            <div class="journey-map">
+                <div class="journey-path">
+                    <svg class="path-svg" viewBox="0 0 800 200">
+                        <defs>
+                            <linearGradient id="pathGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                                <stop offset="0%" style="stop-color:#CD7F32;stop-opacity:1" />
+                                <stop offset="50%" style="stop-color:#FFD700;stop-opacity:1" />
+                                <stop offset="100%" style="stop-color:#6A0DAD;stop-opacity:1" />
+                            </linearGradient>
+                        </defs>
+                        <path d="M 50 150 Q 200 50 400 100 T 750 100" stroke="url(#pathGradient)" stroke-width="4" fill="none"/>
+                    </svg>
+                </div>
+                
+                <!-- Milestone Statues -->
+                <div class="milestones">
+                    <div class="milestone completed" style="left: 10%">
+                        <div class="statue-container">
+                            <div class="statue mortal"></div>
+                            <span class="milestone-label">Mortal</span>
+                        </div>
+                    </div>
+                    <div class="milestone completed" style="left: 30%">
+                        <div class="statue-container">
+                            <div class="statue warrior"></div>
+                            <span class="milestone-label">Warrior</span>
+                        </div>
+                    </div>
+                    <div class="milestone active" style="left: 50%">
+                        <div class="statue-container">
+                            <div class="statue hero"></div>
+                            <span class="milestone-label">Hero</span>
+                        </div>
+                    </div>
+                    <div class="milestone" style="left: 70%">
+                        <div class="statue-container">
+                            <div class="statue demigod"></div>
+                            <span class="milestone-label">Demigod</span>
+                        </div>
+                    </div>
+                    <div class="milestone" style="left: 90%">
+                        <div class="statue-container">
+                            <div class="statue god"></div>
+                            <span class="milestone-label">God</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Current Position Marker -->
+                <div class="hero-marker" style="left: 50%">
+                    <div class="marker-pulse"></div>
+                    <div class="marker-icon">⚔️</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Actions - Battle Commands -->
+        <section class="battle-commands">
+            <h2 class="section-title chiseled-text">BATTLE COMMANDS</h2>
+            <div class="command-grid">
+                <button class="battle-btn forge-workout" onclick="window.location.href='/workout'">
+                    <div class="btn-icon">🔨</div>
+                    <span class="btn-text">Forge Workout</span>
+                    <div class="hammer-strike"></div>
+                </button>
+                <button class="battle-btn track-nutrition" onclick="window.location.href='/nutrition'">
+                    <div class="btn-icon">🍖</div>
+                    <span class="btn-text">Fuel The Fire</span>
+                    <div class="energy-burst"></div>
+                </button>
+                <button class="battle-btn view-progress" onclick="window.location.href='/progress'">
+                    <div class="btn-icon">📊</div>
+                    <span class="btn-text">View Ascension</span>
+                    <div class="lightning-strike"></div>
+                </button>
+                <button class="battle-btn news-scrolls" onclick="scrollToNews()">
+                    <div class="btn-icon">📜</div>
+                    <span class="btn-text">Wisdom Scrolls</span>
+                    <div class="scroll-unfurl"></div>
+                </button>
+            </div>
+        </section>
+
+        <!-- News Section - Scrolls of Wisdom -->
+        <section class="scrolls-of-wisdom" id="news-section">
+            <h2 class="section-title chiseled-text">SCROLLS OF WISDOM</h2>
+            <div class="scroll-rack">
+                <div class="loading-forge" id="news-loading">
+                    <div class="forge-fire"></div>
+                    <span>Retrieving Ancient Knowledge...</span>
+                </div>
+                <div class="scrolls-container" id="news-container">
+                    <!-- News articles will be loaded here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Achievement Showcase -->
+        <section class="trophy-room">
+            <h2 class="section-title chiseled-text">HALL OF GLORY</h2>
+            <div class="trophies-grid">
+                <div class="trophy earned">
+                    <div class="trophy-icon">🏆</div>
+                    <span class="trophy-name">First PR</span>
+                </div>
+                <div class="trophy earned">
+                    <div class="trophy-icon">⚡</div>
+                    <span class="trophy-name">Thunder Lifter</span>
+                </div>
+                <div class="trophy earned">
+                    <div class="trophy-icon">🔥</div>
+                    <span class="trophy-name">30 Day Warrior</span>
+                </div>
+                <div class="trophy locked">
+                    <div class="trophy-icon">👑</div>
+                    <span class="trophy-name">Greek God</span>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Zeus Lightning Modal (for achievements) -->
+<div class="zeus-modal" id="achievementModal">
+    <div class="lightning-bg"></div>
+    <div class="achievement-content">
+        <h3 class="achievement-title">NEW POWER UNLOCKED!</h3>
+        <div class="achievement-icon">⚡</div>
+        <p class="achievement-desc">You have proven yourself worthy!</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/dashboard-epic.js') }}"></script>
+{% endblock %}

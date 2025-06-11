@@ -1,0 +1,156 @@
+name: Production CI/CD
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+env:
+  DOCKER_REGISTRY: registry.digitalocean.com
+  IMAGE_NAME: kinobody-tracker
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    services:
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: kinobody_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.11'
+    
+    - name: Cache dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install pytest pytest-cov flake8 black
+    
+    - name: Run tests
+      env:
+        FLASK_ENV: testing
+        DATABASE_URL: postgresql://postgres:postgres@localhost:5432/kinobody_test
+        SUPABASE_URL: ${{ secrets.PROD_SUPABASE_URL }}
+        SUPABASE_KEY: ${{ secrets.PROD_SUPABASE_KEY }}
+        UPSTASH_REDIS_REST_URL: ${{ secrets.PROD_UPSTASH_URL }}
+        UPSTASH_REDIS_REST_TOKEN: ${{ secrets.PROD_UPSTASH_TOKEN }}
+      run: |
+        pytest -v --cov=. --cov-report=xml
+    
+    - name: Security scan
+      uses: aquasecurity/trivy-action@master
+      with:
+        scan-type: 'fs'
+        scan-ref: '.'
+
+  build-and-deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Build Docker image
+      run: docker build . --target production -t $IMAGE_NAME:${{ github.sha }}
+    
+    - name: Install doctl
+      uses: digitalocean/action-doctl@v2
+      with:
+        token: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN }}
+    
+    - name: Log in to DigitalOcean Container Registry
+      run: doctl registry login
+    
+    - name: Tag image
+      run: |
+        docker tag $IMAGE_NAME:${{ github.sha }} $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:latest
+        docker tag $IMAGE_NAME:${{ github.sha }} $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:${{ github.sha }}
+    
+    - name: Push image to DigitalOcean Container Registry
+      run: |
+        docker push $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:latest
+        docker push $DOCKER_REGISTRY/${{ secrets.DIGITALOCEAN_REGISTRY }}/$IMAGE_NAME:${{ github.sha }}
+    
+    - name: Run database migrations
+      run: |
+        # This would be replaced with actual migration commands
+        echo "Running production migrations..."
+    
+    - name: Deploy to DigitalOcean App Platform (Production)
+      run: |
+        doctl apps update ${{ secrets.PROD_APP_ID }} --spec - <<EOF
+        name: kinobody-tracker
+        region: nyc
+        services:
+        - name: web
+          image:
+            registry_type: DOCR
+            repository: $IMAGE_NAME
+            tag: ${{ github.sha }}
+          http_port: 8000
+          instance_count: 2
+          instance_size_slug: basic-s
+          routes:
+          - path: /
+          health_check:
+            http_path: /health
+            initial_delay_seconds: 30
+            period_seconds: 30
+            success_threshold: 1
+            failure_threshold: 3
+            timeout_seconds: 10
+          env_vars:
+          - key: FLASK_ENV
+            value: production
+          - key: ENVIRONMENT
+            value: production
+          - key: SUPABASE_URL
+            value: ${{ secrets.PROD_SUPABASE_URL }}
+            type: SECRET
+          - key: SUPABASE_KEY
+            value: ${{ secrets.PROD_SUPABASE_KEY }}
+            type: SECRET
+          - key: UPSTASH_REDIS_REST_URL
+            value: ${{ secrets.PROD_UPSTASH_URL }}
+            type: SECRET
+          - key: UPSTASH_REDIS_REST_TOKEN
+            value: ${{ secrets.PROD_UPSTASH_TOKEN }}
+            type: SECRET
+          - key: SENTRY_DSN
+            value: ${{ secrets.SENTRY_DSN }}
+            type: SECRET
+        EOF
+    
+    - name: Verify deployment
+      run: |
+        sleep 60  # Wait for deployment to complete
+        curl -f https://kinobody-tracker.ondigitalocean.app/health || exit 1
+    
+    - name: Notify on success
+      if: success()
+      run: |
+        echo "Production deployment successful!"

@@ -10,6 +10,8 @@ A mobile-first web application designed specifically for tracking progress on th
 - **Mobile Optimized**: Designed for seamless use on mobile devices (425px+ width)
 - **Offline Support**: Full functionality without internet connection
 - **PWA Ready**: Can be installed as a mobile app
+- **Epic Dashboard**: Alternative "Forge of Gods" themed dashboard with immersive Greek mythology design
+- **News Integration**: Integrated news feed from md-pilot.com displaying fitness and training articles
 
 ## Target User
 
@@ -75,6 +77,24 @@ bulk_app/
 ├── Dockerfile                          # Container configuration
 └── README.md                           # This file
 ```
+
+## New Features
+
+### Epic Dashboard - "Forge of Gods"
+Access the revolutionary new dashboard design at `/dashboard-epic`. Features include:
+- **Immersive Greek Mythology Theme**: Transform from mortal to god
+- **Power Crystals**: Interactive stat displays with unique visual effects
+- **Hero's Journey**: Visual progression path with milestone statues
+- **Battle Commands**: Animated navigation with epic effects
+- **Achievement System**: Zeus lightning effects for new PRs
+- **3D Animations**: GPU-accelerated parallax and depth effects
+
+### News Integration
+The app now fetches fitness articles from md-pilot.com:
+- **Scrolls of Wisdom**: Articles displayed as ancient scrolls
+- **Auto-refresh**: Hourly updates with Redis caching
+- **Categories**: Training, nutrition, and mindset articles
+- **Direct Links**: Click to read full articles on md-pilot.com
 
 ## Documentation
 

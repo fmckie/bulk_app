@@ -66,10 +66,9 @@ def handle_db_errors(f):
             return f(*args, **kwargs)
         except Exception as e:
             logger.error(f"Database error in {f.__name__}: {str(e)}")
-            return jsonify({
-                'error': 'Database operation failed',
-                'message': str(e)
-            }), 500
+            # Return None instead of Flask response for database methods
+            # The calling route should handle the error response
+            return None
     return decorated_function
 
 

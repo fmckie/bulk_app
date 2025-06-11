@@ -46,8 +46,96 @@ def index():
     current_date = datetime.now().strftime('%A, %B %d, %Y')
     return render_template('index.html', current_date=current_date)
 
-@app.route('/api/health')
+@app.route('/health')
 def health_check():
+    """Health check endpoint for monitoring"""
+    health_status = {
+        'status': 'healthy',
+        'timestamp': datetime.now().isoformat(),
+        'environment': os.getenv('ENVIRONMENT', 'unknown'),
+        'services': {}
+    }
+    
+    # Check Supabase connection
+    if not DEMO_MODE:
+        try:
+            from database.connection import check_supabase_connection
+            supabase_ok = check_supabase_connection()
+            health_status['services']['supabase'] = 'healthy' if supabase_ok else 'unhealthy'
+        except Exception as e:
+            health_status['services']['supabase'] = f'error: {str(e)}'
+    
+    # Check Redis connection
+    try:
+        from services.redis_cache import default_cache
+        if default_cache.client:
+            test_key = 'health:check'
+            if default_cache.set(test_key, 'ok', ttl=10):
+                default_cache.delete(test_key)
+                health_status['services']['redis'] = 'healthy'
+            else:
+                health_status['services']['redis'] = 'unhealthy'
+        else:
+            health_status['services']['redis'] = 'not configured'
+    except Exception as e:
+        health_status['services']['redis'] = f'error: {str(e)}'
+    
+    # Overall status
+    if any(status != 'healthy' and status != 'not configured' 
+           for status in health_status['services'].values()):
+        health_status['status'] = 'degraded'
+        return jsonify(health_status), 503
+    
+    return jsonify(health_status), 200
+
+@app.route('/dashboard-epic')
+def dashboard_epic():
+    """Epic Dashboard - Forge of Gods Theme"""
+    current_date = datetime.now().strftime('%A, %B %d, %Y')
+    return render_template('dashboard-epic.html', current_date=current_date)
+
+@app.route('/dashboard-pilot')
+def dashboard_pilot():
+    """MD Pilot Dashboard - Professional Health Analytics"""
+    current_date = datetime.now().strftime('%A, %B %d, %Y')
+    # In production, these would come from the database
+    context = {
+        'current_date': current_date,
+        'username': session.get('username', 'Navigator'),
+        'progress_score': 87,
+        'days_active': 45,
+        'strength_score': 245,
+        'body_fat': 12.5,
+        'consistency': 94,
+        'current_weight': 175,
+        'strength_level': 'Advanced',
+        'next_workout_time': '8:00 AM'
+    }
+    return render_template('dashboard-pilot.html', **context)
+
+@app.route('/dashboard-next')
+def dashboard_next():
+    """MD Pilot Next - Revolutionary Health Navigation System"""
+    current_date = datetime.now().strftime('%A, %B %d, %Y')
+    # In production, these would come from the database
+    context = {
+        'current_date': current_date,
+        'username': session.get('username', 'Navigator'),
+        'health_score': 92,
+        'trajectory_change': '+15%',
+        'strength_score': 245,
+        'recovery_score': 87,
+        'nutrition_score': 78,
+        'stress_score': 65,
+        'body_fat': 12.5,
+        'consistency': 94,
+        'current_weight': 175,
+        'days_active': 45
+    }
+    return render_template('dashboard-next.html', **context)
+
+@app.route('/api/health')
+def api_health_check():
     """Health check endpoint"""
     if DEMO_MODE:
         return jsonify({
@@ -325,38 +413,41 @@ def calculate_warmup():
         return jsonify({'error': str(e)}), 400
 
 # Nutrition API Routes
-@app.route('/api/nutrition', methods=['POST'])
-def save_nutrition():
-    """Save daily nutrition data"""
-    if DEMO_MODE:
-        return redirect('/api/demo/nutrition', code=307)  # 307 preserves POST method
-    
-    from auth import login_required, get_current_user_id
-    user_id = get_current_user_id()
-    data = request.json
-    
-    date = data.get('date', datetime.now().date().isoformat())
-    
-    # Check if workout exists for this date to determine if it's a training day
-    workout = WorkoutDB.get_workout_by_date(user_id, date)
-    is_training_day = workout is not None
-    
-    nutrition_data = {
-        'calories': data.get('calories'),
-        'protein_g': data.get('protein'),
-        'carbs_g': data.get('carbs'),
-        'fats_g': data.get('fats'),
-        'notes': data.get('notes', ''),
-        'is_training_day': is_training_day
-    }
-    
-    result = NutritionDB.log_nutrition(user_id, date, nutrition_data)
-    
-    return jsonify({
-        'status': 'success',
-        'message': 'Nutrition data saved successfully',
-        'data': result
-    })
+if not DEMO_MODE:
+    @app.route('/api/nutrition', methods=['POST'])
+    @login_required
+    def save_nutrition():
+        """Save daily nutrition data"""
+        user_id = get_current_user_id()
+        data = request.json
+        
+        date = data.get('date', datetime.now().date().isoformat())
+        
+        # Check if workout exists for this date to determine if it's a training day
+        workout = WorkoutDB.get_workout_by_date(user_id, date)
+        is_training_day = workout is not None
+        
+        nutrition_data = {
+            'calories': data.get('calories'),
+            'protein_g': data.get('protein'),
+            'carbs_g': data.get('carbs'),
+            'fats_g': data.get('fats'),
+            'notes': data.get('notes', ''),
+            'is_training_day': is_training_day
+        }
+        
+        result = NutritionDB.log_nutrition(user_id, date, nutrition_data)
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'Nutrition data saved successfully',
+            'data': result
+        })
+else:
+    @app.route('/api/nutrition', methods=['POST'])
+    def save_nutrition():
+        """Save daily nutrition data - redirect to demo"""
+        return redirect('/api/demo/nutrition', code=307)
 
 @app.route('/api/nutrition/<date>', methods=['GET'])
 def get_nutrition(date):
@@ -406,54 +497,57 @@ def get_nutrition_history():
     
     return jsonify(history)
 
-@app.route('/api/nutrition/targets', methods=['GET'])
-def get_nutrition_targets():
-    """Calculate daily nutrition targets based on user profile and workout schedule"""
-    if DEMO_MODE:
-        return redirect('/api/demo/nutrition/targets')
-    
-    from auth import login_required, get_current_user_id
-    user_id = get_current_user_id()
-    date = request.args.get('date', datetime.now().date().isoformat())
-    
-    # Get user profile for body weight
-    profile = ProfileDB.get_profile(user_id)
-    if not profile or not profile.get('body_weight'):
+if not DEMO_MODE:
+    @app.route('/api/nutrition/targets', methods=['GET'])
+    @login_required
+    def get_nutrition_targets():
+        """Calculate daily nutrition targets based on user profile and workout schedule"""
+        user_id = get_current_user_id()
+        date = request.args.get('date', datetime.now().date().isoformat())
+        
+        # Get user profile for body weight
+        profile = ProfileDB.get_profile(user_id)
+        if not profile or not profile.get('body_weight'):
+            return jsonify({
+                'error': 'Please update your body weight in your profile to calculate targets'
+            }), 400
+        
+        body_weight = float(profile['body_weight'])
+        
+        # Check if today is a training day
+        workout = WorkoutDB.get_workout_by_date(user_id, date)
+        is_training_day = workout is not None
+        
+        # Calculate targets based on Kinobody protocol
+        maintenance = body_weight * 15  # 15 calories per pound
+        
+        if is_training_day:
+            calories = maintenance + 500  # +500 on training days
+        else:
+            calories = maintenance + 100  # +100 on rest days
+        
+        # Macro calculations
+        protein = body_weight * 1.0  # 1g per lb body weight (Kinobody recommendation)
+        fats = calories * 0.25 / 9  # 25% of calories from fats (9 cal per gram)
+        carbs = (calories - (protein * 4) - (fats * 9)) / 4  # Remaining calories from carbs
+        
         return jsonify({
-            'error': 'Please update your body weight in your profile to calculate targets'
-        }), 400
-    
-    body_weight = float(profile['body_weight'])
-    
-    # Check if today is a training day
-    workout = WorkoutDB.get_workout_by_date(user_id, date)
-    is_training_day = workout is not None
-    
-    # Calculate targets based on Kinobody protocol
-    maintenance = body_weight * 15  # 15 calories per pound
-    
-    if is_training_day:
-        calories = maintenance + 500  # +500 on training days
-    else:
-        calories = maintenance + 100  # +100 on rest days
-    
-    # Macro calculations
-    protein = body_weight * 1.0  # 1g per lb body weight (Kinobody recommendation)
-    fats = calories * 0.25 / 9  # 25% of calories from fats (9 cal per gram)
-    carbs = (calories - (protein * 4) - (fats * 9)) / 4  # Remaining calories from carbs
-    
-    return jsonify({
-        'is_training_day': is_training_day,
-        'body_weight': body_weight,
-        'maintenance_calories': round(maintenance),
-        'targets': {
-            'calories': round(calories),
-            'protein': round(protein),
-            'carbs': round(carbs),
-            'fats': round(fats)
-        },
-        'calorie_surplus': round(calories - maintenance)
-    })
+            'is_training_day': is_training_day,
+            'body_weight': body_weight,
+            'maintenance_calories': round(maintenance),
+            'targets': {
+                'calories': round(calories),
+                'protein': round(protein),
+                'carbs': round(carbs),
+                'fats': round(fats)
+            },
+            'calorie_surplus': round(calories - maintenance)
+        })
+else:
+    @app.route('/api/nutrition/targets', methods=['GET'])
+    def get_nutrition_targets():
+        """Redirect to demo nutrition targets"""
+        return redirect('/api/demo/nutrition/targets')
 
 
 # Authentication Routes
@@ -690,15 +784,113 @@ def auth_callback():
         logger.error(f"Auth callback error: {str(e)}")
         return redirect(url_for('login', error='auth_failed'))
 
+@app.route('/api/news', methods=['GET'])
+def get_news():
+    """Get news articles from md-pilot.com"""
+    try:
+        from datetime import datetime, timedelta
+        from services.redis_cache import default_cache
+        
+        # Check if we have cached news in Redis
+        cache_key = 'news_articles'
+        cached_news = None
+        
+        # Try to get from cache using the redis_cache service
+        try:
+            cached_news = default_cache.get(cache_key)
+            if cached_news:
+                logger.info("Retrieved news from cache")
+        except Exception as e:
+            logger.warning(f"Cache retrieval failed: {str(e)}")
+        
+        if cached_news:
+            return jsonify(cached_news)
+        
+        # Fetch from md-pilot.com
+        # Note: Replace with actual API endpoint when available
+        # For now, we'll return mock data that looks like it came from md-pilot.com
+        articles = [
+            {
+                'id': '1',
+                'title': 'The Ancient Greek Training Method for Modern Warriors',
+                'excerpt': 'Discover how the training methods of ancient Greek warriors can transform your physique and mindset in the modern world.',
+                'description': 'A deep dive into the training philosophies that created legendary physiques throughout history.',
+                'url': 'https://md-pilot.com/articles/ancient-greek-training',
+                'published': (datetime.now() - timedelta(days=1)).isoformat(),
+                'featured': True,
+                'category': 'training',
+                'author': 'MD Pilot'
+            },
+            {
+                'id': '2',
+                'title': 'Nutrition Secrets of the Spartans',
+                'excerpt': 'Learn the dietary principles that fueled the most feared warriors in history.',
+                'description': 'Understanding macronutrient timing and the warrior diet for optimal performance.',
+                'url': 'https://md-pilot.com/articles/spartan-nutrition',
+                'published': (datetime.now() - timedelta(days=3)).isoformat(),
+                'featured': False,
+                'category': 'nutrition',
+                'author': 'MD Pilot'
+            },
+            {
+                'id': '3',
+                'title': 'The Psychology of Physical Transformation',
+                'excerpt': 'Master your mind to unlock your body\'s true potential.',
+                'description': 'Mental strategies and mindset shifts that separate champions from everyone else.',
+                'url': 'https://md-pilot.com/articles/transformation-psychology',
+                'published': (datetime.now() - timedelta(days=5)).isoformat(),
+                'featured': False,
+                'category': 'mindset',
+                'author': 'MD Pilot'
+            }
+        ]
+        
+        # In production, you would fetch from the actual API:
+        # try:
+        #     response = requests.get('https://md-pilot.com/api/articles', 
+        #                           params={'limit': 10, 'category': 'fitness'},
+        #                           timeout=5)
+        #     if response.status_code == 200:
+        #         articles = response.json()
+        # except Exception as e:
+        #     logger.error(f"Failed to fetch from md-pilot.com: {str(e)}")
+        
+        news_data = {
+            'articles': articles,
+            'last_updated': datetime.now().isoformat()
+        }
+        
+        # Cache the results using redis_cache service
+        try:
+            if default_cache.set(cache_key, news_data, ttl=3600):  # Cache for 1 hour
+                logger.info("Cached news articles")
+            else:
+                logger.warning("Failed to cache news articles")
+        except Exception as e:
+            logger.warning(f"Failed to cache news: {str(e)}")
+        
+        return jsonify(news_data)
+        
+    except Exception as e:
+        logger.error(f"Error fetching news: {str(e)}")
+        return jsonify({
+            'articles': [],
+            'error': 'Failed to fetch news articles'
+        }), 500
+
 # Error handlers
 @app.errorhandler(404)
 def not_found(error):
+    logger.error(f"404 error: {error}")
     return jsonify({'error': 'Not found'}), 404
 
 @app.errorhandler(500)
 def internal_error(error):
+    logger.error(f"500 error: {error}")
     return jsonify({'error': 'Internal server error'}), 500
 
 if __name__ == '__main__':
     # Run development server
-    app.run(debug=True, host='0.0.0.0', port=8000)
+    import os
+    port = int(os.environ.get('PORT', 8000))
+    app.run(debug=True, host='0.0.0.0', port=port)

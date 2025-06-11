@@ -23,6 +23,10 @@ docker-compose.override.yml
 .env
 .env.local
 .env.*.local
+.env.dev
+.env.prod
+.env.dev.local
+.env.prod.local
 
 # IDE
 .vscode/
@@ -51,3 +55,23 @@ app/
 # Build outputs
 dist/
 build/
+
+# Test outputs
+.coverage
+htmlcov/
+.pytest_cache/
+coverage.xml
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Logs
+logs/
+*.log
+
+# Migrations (keep structure but not actual migration files in dev)
+migrations/*.sql
+!migrations/migration_runner.py
+!migrations/__init__.py

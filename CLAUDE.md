@@ -320,67 +320,43 @@ Supabase PostgreSQL database serves as the primary data store with the following
 
 ### Setup
 ```python
-# Initialize Upstash Redis client
-import redis
-from upstash_redis import Redis
+# Use the redis_cache service instead of direct initialization
+from services.redis_cache import default_cache
 
-# Connect using REST API
-redis_client = Redis(
-    url="https://YOUR-ENDPOINT.upstash.io",
-    token="YOUR-UPSTASH-TOKEN"
-)
+# The service automatically handles:
+# - Upstash REST API connection
+# - Environment-based configuration
+# - Fallback to local Redis in development
+# - Error handling and logging
 ```
 
 ### Common Caching Functions
 ```python
-# Cache user data
-def cache_user_data(user_id, data, ttl=3600):
-    """Cache user data with 1 hour TTL"""
-    key = f"user:{user_id}"
-    redis_client.setex(key, ttl, json.dumps(data))
+# Using the redis_cache service
+from services.redis_cache import default_cache
 
-# Cache workout sessions
-def cache_workout(user_id, workout_id, data, ttl=86400):
-    """Cache workout data with 24 hour TTL"""
-    key = f"workout:{user_id}:{workout_id}"
-    redis_client.setex(key, ttl, json.dumps(data))
+# Simple key-value operations
+default_cache.set('key', value, ttl=3600)  # 1 hour TTL
+value = default_cache.get('key')
+default_cache.delete('key')
 
-# Cache nutrition data
-def cache_nutrition(user_id, date, data, ttl=86400):
-    """Cache daily nutrition with 24 hour TTL"""
-    key = f"nutrition:{user_id}:{date}"
-    redis_client.setex(key, ttl, json.dumps(data))
+# Pattern-based deletion
+deleted_count = default_cache.delete_pattern('user:*')
 
-# Cache progress calculations
-def cache_progress_stats(user_id, stats, ttl=3600):
-    """Cache calculated progress stats with 1 hour TTL"""
-    key = f"progress:{user_id}"
-    redis_client.setex(key, ttl, json.dumps(stats))
+# Clear all cache for a user
+default_cache.clear_user_cache(user_id)
 
-# Get cached data with fallback
-def get_cached_or_fetch(key, fetch_function):
-    """Get from cache or fetch from database"""
-    cached = redis_client.get(key)
-    if cached:
-        return json.loads(cached)
-    
-    # Fetch from database
-    data = fetch_function()
-    redis_client.setex(key, 3600, json.dumps(data))
-    return data
+# Cache decorator for functions
+from services.redis_cache import cache_result
 
-# Invalidate cache patterns
-def invalidate_user_cache(user_id):
-    """Invalidate all user-related cache"""
-    patterns = [
-        f"user:{user_id}",
-        f"workout:{user_id}:*",
-        f"nutrition:{user_id}:*",
-        f"progress:{user_id}"
-    ]
-    for pattern in patterns:
-        for key in redis_client.scan_iter(match=pattern):
-            redis_client.delete(key)
+@cache_result(ttl=3600, key_prefix='workout_stats')
+def get_workout_stats(user_id, date_range):
+    # Expensive calculation here
+    return stats
+
+# Environment-prefixed keys
+# The service automatically prefixes keys with environment
+# e.g., "development:user:123" or "production:user:123"
 ```
 
 ### Cache Strategy
@@ -411,6 +387,64 @@ redis-cli -u redis://default:YOUR_PASSWORD@YOUR_ENDPOINT:PORT flushall
 - Flask sessions handle user state with Supabase for persistent storage
 - Local Storage provides offline functionality when backend is unavailable
 - Example folders are for reference only - build the actual app in the main directory
+
+## Epic Dashboard Feature
+
+### Overview
+Alternative dashboard with "Forge of Gods" Greek mythology theme at `/dashboard-epic`.
+
+### Key Components
+- **Power Crystals**: Interactive stat displays (strength, physique, nutrition, progress)
+- **Hero's Journey**: Visual progression path with milestones
+- **Battle Commands**: Animated navigation buttons
+- **Scrolls of Wisdom**: News section integration
+
+### Files
+- `templates/dashboard-epic.html`: Epic dashboard template
+- `static/css/dashboard-epic.css`: Custom animations and effects
+- `static/js/dashboard-epic.js`: Interactive elements and news fetching
+
+### Design Philosophy
+- Break away from generic AI app aesthetics
+- Target Kinobody audience (young men pursuing Greek God physique)
+- Immersive experience with 3D effects and animations
+- Mobile-first but with desktop enhancements
+
+## News Integration Feature
+
+### API Endpoint
+`GET /api/news` - Fetches articles from md-pilot.com
+
+### Implementation Details
+```python
+# In app.py
+@app.route('/api/news', methods=['GET'])
+def get_news():
+    # Uses redis_cache service for caching (1 hour TTL)
+    # Falls back to mock data (replace with actual md-pilot.com API)
+    # Returns articles with title, excerpt, URL, date, etc.
+    from services.redis_cache import default_cache
+    
+    cache_key = 'news_articles'
+    cached_news = default_cache.get(cache_key)
+    if cached_news:
+        return jsonify(cached_news)
+    
+    # Fetch fresh data...
+    default_cache.set(cache_key, news_data, ttl=3600)
+```
+
+### Frontend Integration
+- Articles displayed as "Scrolls of Wisdom"
+- Auto-loads on dashboard-epic page
+- Click to open full article on md-pilot.com
+- Graceful fallback if API unavailable
+
+### Future Enhancements
+- Replace mock data with actual md-pilot.com API integration
+- Add article categories/filtering
+- Implement article search
+- Add reading progress tracking
 
 ## Puppeteer Visual Testing
 
@@ -498,6 +532,26 @@ def load_kinobody_config():
     
     return kinobody_config
 ```
+
+## Recent Updates and Fixes
+
+### Authentication Requirements
+- **Protected Endpoints**: The following endpoints now require authentication:
+  - `POST /api/nutrition` - Save nutrition data
+  - `GET /api/nutrition/targets` - Get nutrition targets
+  - All other data modification endpoints
+- **Error Handling**: Database errors now return `None` instead of Flask responses
+- **Test Updates**: Tests have been updated to expect 401 for unauthenticated requests
+
+### Redis Cache Integration
+- **Unified Service**: Use `services.redis_cache` instead of direct Upstash calls
+- **Environment Prefixes**: All cache keys are automatically prefixed with environment
+- **News Caching**: Fixed to use the unified cache service
+
+### Testing
+- **Run Tests**: `pytest -v` to run all tests
+- **Coverage Report**: Tests generate HTML coverage report in `htmlcov/`
+- **All Tests Passing**: 32 tests currently passing with 41% code coverage
 
 ## Deployment Checklist
 

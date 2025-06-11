@@ -14,11 +14,8 @@ class TestNutritionAPI:
             json={'calories': 2500, 'protein': 175},
             content_type='application/json'
         )
-        # In demo mode, should redirect to demo API
-        assert response.status_code in [307, 302]
-        # Check if it redirects to demo endpoint
-        if hasattr(response, 'location'):
-            assert '/api/demo/nutrition' in response.location
+        # Should return 401 Unauthorized when not authenticated
+        assert response.status_code == 401
     
     def test_save_nutrition_demo_mode(self, auth_client, clear_demo_data):
         """Test saving nutrition data in demo mode"""

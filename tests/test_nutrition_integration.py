@@ -202,7 +202,7 @@ class TestNutritionIntegration:
     def test_nutrition_without_profile_weight(self, client):
         """Test that nutrition targets fail gracefully without body weight"""
         # This would require modifying the demo user profile
-        # For now, we'll test that the endpoint returns expected structure
+        # For now, we'll test that the endpoint requires authentication
         response = client.get('/api/nutrition/targets')
-        # Should redirect to demo in demo mode
-        assert response.status_code in [302, 307]
+        # Should return 401 Unauthorized without authentication
+        assert response.status_code == 401
