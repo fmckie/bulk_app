@@ -22,11 +22,6 @@ function initializeMealPrep() {
     if (budgetInput) {
         budgetInput.value = localStorage.getItem('mealPrepBudget') || 150;
     }
-    
-    const storeSelect = document.getElementById('store');
-    if (storeSelect) {
-        storeSelect.value = localStorage.getItem('mealPrepStore') || '';
-    }
 }
 
 // Setup event listeners
@@ -126,16 +121,11 @@ async function handleFormSubmit(e) {
     const requestData = {
         dietary_requirements: dietaryRequirements,
         budget: parseFloat(formData.get('budget')),
-        store_preference: formData.get('store'),
-        exclusions: formData.get('exclusions').split(',').map(s => s.trim()).filter(s => s),
-        cooking_time: parseInt(formData.get('cooking_time')),
-        variety: formData.get('variety'),
         use_ai: document.getElementById('aiAssistant').checked
     };
     
     // Save preferences
     localStorage.setItem('mealPrepBudget', requestData.budget);
-    localStorage.setItem('mealPrepStore', requestData.store_preference);
     
     // Show loading state
     showLoadingState();

@@ -1,0 +1,194 @@
+{
+  "day_plan": {
+    "date": "2024-01-15",
+    "day_type": "training day",
+    "total_targets": {
+      "calories": 3125,
+      "protein_g": 175,
+      "carbs_g": 411,
+      "fats_g": 87
+    },
+    "meals": [
+      {
+        "meal_number": 1,
+        "time": "12:00 PM",
+        "name": "Chicken and Rice Bowl",
+        "calories": 991,
+        "protein_g": 36.9,
+        "carbs_g": 124.69999999999999,
+        "fats_g": 37.7,
+        "ingredients": [
+          {
+            "name": "Chicken breast, cooked",
+            "amount": 170,
+            "unit": "g",
+            "calories": 428,
+            "protein_g": 27.8,
+            "carbs_g": 29.9,
+            "fats_g": 21.9,
+            "usda_fdc_id": 171514,
+            "usda_verified": true
+          },
+          {
+            "name": "Rice, white, cooked",
+            "amount": 350,
+            "unit": "g",
+            "calories": 340,
+            "protein_g": 7.1,
+            "carbs_g": 73.8,
+            "fats_g": 0.7,
+            "usda_fdc_id": 169711,
+            "usda_verified": true
+          },
+          {
+            "name": "Sweet potato, baked",
+            "amount": 100,
+            "unit": "g",
+            "calories": 90,
+            "protein_g": 2,
+            "carbs_g": 21,
+            "fats_g": 0.1,
+            "usda_fdc_id": 170134,
+            "usda_verified": true
+          },
+          {
+            "name": "Oil, olive",
+            "amount": 15,
+            "unit": "g",
+            "calories": 133,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 15,
+            "usda_verified": false
+          }
+        ],
+        "instructions": [
+          "Cook chicken breast until fully done.",
+          "Serve with cooked rice and baked sweet potato. Drizzle olive oil over the top."
+        ]
+      },
+      {
+        "meal_number": 2,
+        "time": "4:30 PM",
+        "name": "Beef Stir Fry with Rice",
+        "calories": 1045,
+        "protein_g": 63.1,
+        "carbs_g": 115.9,
+        "fats_g": 34.95,
+        "ingredients": [
+          {
+            "name": "Ground beef 90% lean, cooked",
+            "amount": 200,
+            "unit": "g",
+            "calories": 434,
+            "protein_g": 52,
+            "carbs_g": 0,
+            "fats_g": 24,
+            "usda_fdc_id": 171795,
+            "usda_verified": true
+          },
+          {
+            "name": "Rice, white, cooked",
+            "amount": 400,
+            "unit": "g",
+            "calories": 388,
+            "protein_g": 8.1,
+            "carbs_g": 84.4,
+            "fats_g": 0.8,
+            "usda_fdc_id": 169711,
+            "usda_verified": true
+          },
+          {
+            "name": "Sweet potato, baked",
+            "amount": 150,
+            "unit": "g",
+            "calories": 135,
+            "protein_g": 3,
+            "carbs_g": 31.5,
+            "fats_g": 0.15,
+            "usda_fdc_id": 170134,
+            "usda_verified": true
+          },
+          {
+            "name": "Oil, olive",
+            "amount": 10,
+            "unit": "g",
+            "calories": 88,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 10,
+            "usda_verified": false
+          }
+        ],
+        "instructions": [
+          "Cook ground beef thoroughly.",
+          "Serve with cooked rice and baked sweet potato. Add olive oil for flavor."
+        ]
+      },
+      {
+        "meal_number": 3,
+        "time": "7:30 PM",
+        "name": "Chicken Pasta with Olive Oil",
+        "calories": 1165,
+        "protein_g": 46.1,
+        "carbs_g": 144.0,
+        "fats_g": 44.3,
+        "ingredients": [
+          {
+            "name": "Chicken breast, cooked",
+            "amount": 220,
+            "unit": "g",
+            "calories": 554,
+            "protein_g": 36.0,
+            "carbs_g": 38.6,
+            "fats_g": 28.4,
+            "usda_fdc_id": 171514,
+            "usda_verified": true
+          },
+          {
+            "name": "Rice, white, cooked",
+            "amount": 400,
+            "unit": "g",
+            "calories": 388,
+            "protein_g": 8.1,
+            "carbs_g": 84.4,
+            "fats_g": 0.8,
+            "usda_fdc_id": 169711,
+            "usda_verified": true
+          },
+          {
+            "name": "Sweet potato, baked",
+            "amount": 100,
+            "unit": "g",
+            "calories": 90,
+            "protein_g": 2,
+            "carbs_g": 21,
+            "fats_g": 0.1,
+            "usda_fdc_id": 170134,
+            "usda_verified": true
+          },
+          {
+            "name": "Oil, olive",
+            "amount": 15,
+            "unit": "g",
+            "calories": 133,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 15,
+            "usda_verified": false
+          }
+        ],
+        "instructions": [
+          "Grill chicken breast until golden.",
+          "Serve with cooked rice and a side of baked sweet potato. Finish with a drizzle of olive oil."
+        ]
+      }
+    ],
+    "daily_totals": {
+      "calories": 3201,
+      "protein_g": 146.1,
+      "carbs_g": 384.6,
+      "fats_g": 116.95
+    }
+  }
+}

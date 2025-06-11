@@ -1,0 +1,258 @@
+{
+  "day_plan": {
+    "date": "2024-01-15",
+    "day_type": "training day",
+    "total_targets": {
+      "calories": 3125,
+      "protein_g": 175,
+      "carbs_g": 411,
+      "fats_g": 87
+    },
+    "meals": [
+      {
+        "meal_number": 1,
+        "time": "12:00 PM",
+        "name": "Chicken Avocado Salad",
+        "description": "A refreshing salad with grilled chicken, avocado, mixed greens, and a light olive oil dressing.",
+        "calories": 937,
+        "protein_g": 53,
+        "carbs_g": 78,
+        "fats_g": 47,
+        "fiber_g": 15,
+        "prep_time": 20,
+        "cook_time": 15,
+        "ingredients": [
+          {
+            "name": "Grilled chicken breast",
+            "amount": 200,
+            "unit": "g",
+            "calories": 330,
+            "protein_g": 62,
+            "carbs_g": 0,
+            "fats_g": 7.2
+          },
+          {
+            "name": "Avocado",
+            "amount": 150,
+            "unit": "g",
+            "calories": 240,
+            "protein_g": 3,
+            "carbs_g": 13.5,
+            "fats_g": 22.5
+          },
+          {
+            "name": "Mixed greens",
+            "amount": 100,
+            "unit": "g",
+            "calories": 25,
+            "protein_g": 2,
+            "carbs_g": 4,
+            "fats_g": 0.4
+          },
+          {
+            "name": "Olive oil",
+            "amount": 15,
+            "unit": "g",
+            "calories": 135,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 15
+          },
+          {
+            "name": "Balsamic vinegar",
+            "amount": 10,
+            "unit": "g",
+            "calories": 22,
+            "protein_g": 0,
+            "carbs_g": 5.5,
+            "fats_g": 0
+          },
+          {
+            "name": "Cherry tomatoes",
+            "amount": 100,
+            "unit": "g",
+            "calories": 18,
+            "protein_g": 0.9,
+            "carbs_g": 3.9,
+            "fats_g": 0.2
+          },
+          {
+            "name": "Whole grain bread",
+            "amount": 60,
+            "unit": "g",
+            "calories": 167,
+            "protein_g": 6.1,
+            "carbs_g": 31.1,
+            "fats_g": 2.1
+          }
+        ],
+        "instructions": [
+          "Grill the chicken breast until fully cooked.",
+          "Slice the avocado and cherry tomatoes.",
+          "Toss the mixed greens, avocado, tomatoes, and sliced chicken with olive oil and balsamic vinegar.",
+          "Serve with slices of whole grain bread."
+        ],
+        "meal_prep_tips": "Store salad ingredients separately from dressing to maintain freshness. Combine just before serving."
+      },
+      {
+        "meal_number": 2,
+        "time": "4:30 PM",
+        "name": "Rice and Beans with Grilled Chicken",
+        "description": "Hearty meal of white rice and black beans topped with grilled chicken, served with a side of steamed broccoli.",
+        "calories": 1093,
+        "protein_g": 58,
+        "carbs_g": 168,
+        "fats_g": 14,
+        "fiber_g": 18,
+        "prep_time": 15,
+        "cook_time": 30,
+        "ingredients": [
+          {
+            "name": "Grilled chicken breast",
+            "amount": 150,
+            "unit": "g",
+            "calories": 248,
+            "protein_g": 46.5,
+            "carbs_g": 0,
+            "fats_g": 5.4
+          },
+          {
+            "name": "White rice",
+            "amount": 300,
+            "unit": "g",
+            "calories": 390,
+            "protein_g": 8.1,
+            "carbs_g": 84,
+            "fats_g": 0.9
+          },
+          {
+            "name": "Black beans",
+            "amount": 200,
+            "unit": "g",
+            "calories": 227,
+            "protein_g": 15,
+            "carbs_g": 41,
+            "fats_g": 0.8
+          },
+          {
+            "name": "Steamed broccoli",
+            "amount": 200,
+            "unit": "g",
+            "calories": 68,
+            "protein_g": 5.7,
+            "carbs_g": 13.6,
+            "fats_g": 0.8
+          },
+          {
+            "name": "Olive oil",
+            "amount": 5,
+            "unit": "g",
+            "calories": 45,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 5
+          },
+          {
+            "name": "Spices",
+            "amount": 5,
+            "unit": "g",
+            "calories": 15,
+            "protein_g": 0.8,
+            "carbs_g": 2.4,
+            "fats_g": 0.2
+          }
+        ],
+        "instructions": [
+          "Grill the chicken breast until fully cooked.",
+          "Cook white rice according to package instructions.",
+          "Heat black beans with spices.",
+          "Steam broccoli until tender.",
+          "Serve grilled chicken on top of rice and beans, with steamed broccoli on the side."
+        ],
+        "meal_prep_tips": "Pre-cook rice, beans, and chicken. Store separately and reheat for serving. Broccoli is best steamed fresh."
+      },
+      {
+        "meal_number": 3,
+        "time": "7:30 PM",
+        "name": "Pasta with Meat Sauce and Mixed Vegetables",
+        "description": "Whole wheat pasta in a hearty meat sauce, served with a side of mixed saut\u00e9ed vegetables.",
+        "calories": 1095,
+        "protein_g": 64,
+        "carbs_g": 165,
+        "fats_g": 26,
+        "fiber_g": 20,
+        "prep_time": 20,
+        "cook_time": 30,
+        "ingredients": [
+          {
+            "name": "Whole wheat pasta",
+            "amount": 200,
+            "unit": "g",
+            "calories": 280,
+            "protein_g": 10,
+            "carbs_g": 58,
+            "fats_g": 2
+          },
+          {
+            "name": "Ground turkey",
+            "amount": 200,
+            "unit": "g",
+            "calories": 320,
+            "protein_g": 48,
+            "carbs_g": 0,
+            "fats_g": 16
+          },
+          {
+            "name": "Tomato sauce",
+            "amount": 200,
+            "unit": "g",
+            "calories": 72,
+            "protein_g": 2,
+            "carbs_g": 13,
+            "fats_g": 2
+          },
+          {
+            "name": "Mixed vegetables (bell peppers, zucchini, onion)",
+            "amount": 300,
+            "unit": "g",
+            "calories": 90,
+            "protein_g": 3,
+            "carbs_g": 21,
+            "fats_g": 0.9
+          },
+          {
+            "name": "Olive oil",
+            "amount": 15,
+            "unit": "g",
+            "calories": 135,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 15
+          },
+          {
+            "name": "Parmesan cheese",
+            "amount": 30,
+            "unit": "g",
+            "calories": 131,
+            "protein_g": 12,
+            "carbs_g": 1,
+            "fats_g": 8.7
+          }
+        ],
+        "instructions": [
+          "Cook whole wheat pasta according to package instructions.",
+          "Brown ground turkey in a pan, then add tomato sauce and simmer.",
+          "Saut\u00e9 mixed vegetables in olive oil until tender.",
+          "Serve pasta with meat sauce and a side of saut\u00e9ed vegetables. Top with Parmesan cheese."
+        ],
+        "meal_prep_tips": "Pre-cook pasta and meat sauce. Reheat together when serving. Vegetables can be pre-cut and saut\u00e9ed fresh."
+      }
+    ],
+    "daily_totals": {
+      "calories": 3125,
+      "protein_g": 175,
+      "carbs_g": 411,
+      "fats_g": 87
+    }
+  }
+}

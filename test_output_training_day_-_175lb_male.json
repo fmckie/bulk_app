@@ -1,0 +1,505 @@
+{
+  "meal_plan": {
+    "day_1": {
+      "date": "YYYY-MM-DD",
+      "is_training_day": true,
+      "target_calories": 3125,
+      "target_protein": 175,
+      "target_carbs": 406,
+      "target_fats": 87,
+      "meals": {
+        "meal_1": {
+          "time": "12:00 PM",
+          "name": "Grilled Chicken Salad",
+          "meal_type": "lunch",
+          "description": "A high-protein salad with grilled chicken, mixed greens, avocado, and quinoa.",
+          "calories": 600,
+          "protein_g": 40,
+          "carbs_g": 45,
+          "fats_g": 22,
+          "fiber_g": 10,
+          "prep_time": 15,
+          "cook_time": 15,
+          "ingredients": [
+            {
+              "name": "Grilled chicken breast",
+              "amount": 6,
+              "unit": "oz",
+              "calories": 280
+            },
+            {
+              "name": "Mixed greens",
+              "amount": 2,
+              "unit": "cups",
+              "calories": 20
+            },
+            {
+              "name": "Avocado",
+              "amount": 0.5,
+              "unit": "medium",
+              "calories": 120
+            },
+            {
+              "name": "Quinoa",
+              "amount": 0.5,
+              "unit": "cup",
+              "calories": 111
+            },
+            {
+              "name": "Balsamic vinaigrette",
+              "amount": 1,
+              "unit": "tbsp",
+              "calories": 14
+            },
+            {
+              "name": "Cherry tomatoes",
+              "amount": 0.5,
+              "unit": "cup",
+              "calories": 55
+            }
+          ],
+          "instructions": [
+            "Grill the chicken breast and slice it.",
+            "Combine the mixed greens, sliced avocado, cooked quinoa, and cherry tomatoes in a large bowl.",
+            "Top with grilled chicken and drizzle with balsamic vinaigrette."
+          ],
+          "meal_prep_tips": "Can be refrigerated for up to 3 days. Dressing stored separately."
+        },
+        "meal_2": {
+          "time": "6:00 PM",
+          "name": "Beef Stir-Fry",
+          "meal_type": "dinner",
+          "description": "Stir-fried lean beef with broccoli, bell peppers, and brown rice.",
+          "calories": 800,
+          "protein_g": 55,
+          "carbs_g": 85,
+          "fats_g": 22,
+          "fiber_g": 8,
+          "prep_time": 20,
+          "cook_time": 20,
+          "ingredients": [
+            {
+              "name": "Lean beef",
+              "amount": 8,
+              "unit": "oz",
+              "calories": 440
+            },
+            {
+              "name": "Broccoli",
+              "amount": 1,
+              "unit": "cup",
+              "calories": 55
+            },
+            {
+              "name": "Bell pepper",
+              "amount": 1,
+              "unit": "medium",
+              "calories": 37
+            },
+            {
+              "name": "Brown rice",
+              "amount": 1,
+              "unit": "cup",
+              "calories": 216
+            },
+            {
+              "name": "Soy sauce",
+              "amount": 2,
+              "unit": "tbsp",
+              "calories": 18
+            },
+            {
+              "name": "Olive oil",
+              "amount": 1,
+              "unit": "tbsp",
+              "calories": 119
+            }
+          ],
+          "instructions": [
+            "Stir-fry the beef and vegetables in olive oil and season with soy sauce.",
+            "Serve over cooked brown rice."
+          ],
+          "meal_prep_tips": "Store in airtight containers for up to 4 days. Reheat before eating."
+        },
+        "snack": {
+          "time": "3:00 PM",
+          "name": "Greek Yogurt with Honey and Almonds",
+          "meal_type": "snack",
+          "description": "Plain Greek yogurt topped with honey and sliced almonds.",
+          "calories": 250,
+          "protein_g": 20,
+          "carbs_g": 18,
+          "fats_g": 10,
+          "fiber_g": 2,
+          "prep_time": 5,
+          "cook_time": 0,
+          "ingredients": [
+            {
+              "name": "Greek yogurt",
+              "amount": 1,
+              "unit": "cup",
+              "calories": 220
+            },
+            {
+              "name": "Honey",
+              "amount": 1,
+              "unit": "tbsp",
+              "calories": 64
+            },
+            {
+              "name": "Sliced almonds",
+              "amount": 1,
+              "unit": "tbsp",
+              "calories": 60
+            }
+          ],
+          "instructions": [
+            "Top the Greek yogurt with honey and sliced almonds."
+          ],
+          "meal_prep_tips": "Yogurt can be stored in individual containers; add toppings before serving."
+        }
+      }
+    },
+    "day_2": {
+      "date": "YYYY-MM-DD",
+      "is_training_day": false,
+      "target_calories": 2725,
+      "target_protein": 175,
+      "target_carbs": 331,
+      "target_fats": 76,
+      "meals": {
+        "meal_1": {
+          "time": "12:00 PM",
+          "name": "Turkey and Avocado Wrap",
+          "meal_type": "lunch",
+          "description": "Whole wheat wrap filled with turkey breast, avocado, lettuce, and tomato.",
+          "calories": 500,
+          "protein_g": 35,
+          "carbs_g": 40,
+          "fats_g": 20,
+          "fiber_g": 8,
+          "prep_time": 10,
+          "cook_time": 0,
+          "ingredients": [
+            {
+              "name": "Whole wheat wrap",
+              "amount": 1,
+              "unit": "large",
+              "calories": 200
+            },
+            {
+              "name": "Turkey breast",
+              "amount": 4,
+              "unit": "oz",
+              "calories": 120
+            },
+            {
+              "name": "Avocado",
+              "amount": 0.25,
+              "unit": "medium",
+              "calories": 60
+            },
+            {
+              "name": "Lettuce",
+              "amount": 0.5,
+              "unit": "cup",
+              "calories": 5
+            },
+            {
+              "name": "Tomato",
+              "amount": 2,
+              "unit": "slices",
+              "calories": 5
+            }
+          ],
+          "instructions": [
+            "Lay out the wrap and layer with turkey, avocado slices, lettuce, and tomato.",
+            "Roll the wrap tightly and slice in half."
+          ],
+          "meal_prep_tips": "Prepare ingredients in advance and assemble wraps before eating to prevent sogginess."
+        },
+        "meal_2": {
+          "time": "6:00 PM",
+          "name": "Salmon with Quinoa and Asparagus",
+          "meal_type": "dinner",
+          "description": "Baked salmon served with quinoa and roasted asparagus.",
+          "calories": 700,
+          "protein_g": 45,
+          "carbs_g": 55,
+          "fats_g": 30,
+          "fiber_g": 10,
+          "prep_time": 15,
+          "cook_time": 25,
+          "ingredients": [
+            {
+              "name": "Salmon fillet",
+              "amount": 6,
+              "unit": "oz",
+              "calories": 367
+            },
+            {
+              "name": "Quinoa",
+              "amount": 0.5,
+              "unit": "cup",
+              "calories": 111
+            },
+            {
+              "name": "Asparagus",
+              "amount": 10,
+              "unit": "spears",
+              "calories": 30
+            },
+            {
+              "name": "Olive oil",
+              "amount": 1,
+              "unit": "tbsp",
+              "calories": 119
+            },
+            {
+              "name": "Lemon juice",
+              "amount": 1,
+              "unit": "tbsp",
+              "calories": 4
+            }
+          ],
+          "instructions": [
+            "Season the salmon with lemon juice and bake at 375\u00b0F for 20-25 minutes.",
+            "Cook quinoa as per package instructions.",
+            "Toss asparagus in olive oil and roast alongside salmon for the last 10-15 minutes."
+          ],
+          "meal_prep_tips": "Salmon and asparagus can be refrigerated for up to 3 days. Reheat gently."
+        },
+        "snack": {
+          "time": "3:00 PM",
+          "name": "Protein Shake",
+          "meal_type": "snack",
+          "description": "Protein shake made with whey protein, banana, and almond milk.",
+          "calories": 300,
+          "protein_g": 25,
+          "carbs_g": 35,
+          "fats_g": 6,
+          "fiber_g": 4,
+          "prep_time": 5,
+          "cook_time": 0,
+          "ingredients": [
+            {
+              "name": "Whey protein powder",
+              "amount": 1,
+              "unit": "scoop",
+              "calories": 120
+            },
+            {
+              "name": "Banana",
+              "amount": 1,
+              "unit": "medium",
+              "calories": 105
+            },
+            {
+              "name": "Almond milk",
+              "amount": 1,
+              "unit": "cup",
+              "calories": 60
+            }
+          ],
+          "instructions": [
+            "Blend the whey protein powder, banana, and almond milk until smooth."
+          ],
+          "meal_prep_tips": "Prepare protein powder in individual servings; blend with banana and almond milk before drinking."
+        }
+      }
+    }
+  },
+  "shopping_list": {
+    "proteins": [
+      {
+        "name": "Chicken breast",
+        "amount": 3,
+        "unit": "lbs",
+        "estimated_cost": 15.0
+      },
+      {
+        "name": "Lean beef",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 12.0
+      },
+      {
+        "name": "Turkey breast",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 10.0
+      },
+      {
+        "name": "Salmon fillet",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 18.0
+      },
+      {
+        "name": "Whey protein powder",
+        "amount": 1,
+        "unit": "lb",
+        "estimated_cost": 30.0
+      }
+    ],
+    "carbs": [
+      {
+        "name": "Quinoa",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 5.0
+      },
+      {
+        "name": "Brown rice",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 3.0
+      },
+      {
+        "name": "Whole wheat wrap",
+        "amount": 7,
+        "unit": "units",
+        "estimated_cost": 4.0
+      },
+      {
+        "name": "Banana",
+        "amount": 7,
+        "unit": "units",
+        "estimated_cost": 2.0
+      }
+    ],
+    "fats": [
+      {
+        "name": "Avocado",
+        "amount": 7,
+        "unit": "units",
+        "estimated_cost": 7.0
+      },
+      {
+        "name": "Olive oil",
+        "amount": 1,
+        "unit": "bottle",
+        "estimated_cost": 6.0
+      },
+      {
+        "name": "Almonds",
+        "amount": 0.5,
+        "unit": "lb",
+        "estimated_cost": 4.0
+      }
+    ],
+    "vegetables": [
+      {
+        "name": "Mixed greens",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 5.0
+      },
+      {
+        "name": "Broccoli",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 4.0
+      },
+      {
+        "name": "Bell pepper",
+        "amount": 7,
+        "unit": "units",
+        "estimated_cost": 5.0
+      },
+      {
+        "name": "Asparagus",
+        "amount": 2,
+        "unit": "lbs",
+        "estimated_cost": 4.0
+      },
+      {
+        "name": "Lettuce",
+        "amount": 1,
+        "unit": "head",
+        "estimated_cost": 1.0
+      },
+      {
+        "name": "Tomato",
+        "amount": 4,
+        "unit": "units",
+        "estimated_cost": 2.0
+      }
+    ],
+    "fruits": [
+      {
+        "name": "Lemon",
+        "amount": 4,
+        "unit": "units",
+        "estimated_cost": 2.0
+      }
+    ],
+    "dairy": [
+      {
+        "name": "Greek yogurt",
+        "amount": 7,
+        "unit": "cups",
+        "estimated_cost": 7.0
+      }
+    ],
+    "pantry": [
+      {
+        "name": "Honey",
+        "amount": 1,
+        "unit": "bottle",
+        "estimated_cost": 4.0
+      },
+      {
+        "name": "Soy sauce",
+        "amount": 1,
+        "unit": "bottle",
+        "estimated_cost": 3.0
+      },
+      {
+        "name": "Balsamic vinaigrette",
+        "amount": 1,
+        "unit": "bottle",
+        "estimated_cost": 3.0
+      }
+    ],
+    "spices": [
+      {
+        "name": "Salt",
+        "amount": 1,
+        "unit": "bottle",
+        "estimated_cost": 1.0
+      },
+      {
+        "name": "Pepper",
+        "amount": 1,
+        "unit": "bottle",
+        "estimated_cost": 2.0
+      }
+    ]
+  },
+  "total_estimated_cost": 150.0,
+  "meal_prep_schedule": {
+    "sunday": [
+      "Prep proteins: Grill chicken and bake salmon",
+      "Cook quinoa and brown rice",
+      "Chop vegetables: Broccoli, bell peppers, asparagus"
+    ],
+    "wednesday": [
+      "Prep fresh vegetables: Wash and cut lettuce and tomato for wraps",
+      "Cook additional meals if needed"
+    ]
+  },
+  "tips": [
+    "To save time, use a rice cooker for grains like quinoa and brown rice.",
+    "Invest in a good set of meal prep containers to keep food fresh."
+  ],
+  "metadata": {
+    "generated_at": "2025-06-11T18:59:42.338893",
+    "user_requirements": {
+      "body_weight": 175,
+      "dietary_requirements": [],
+      "budget": 150
+    },
+    "ai_model": "gpt-4-0125-preview"
+  }
+}

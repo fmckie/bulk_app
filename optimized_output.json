@@ -1,0 +1,238 @@
+{
+  "success": true,
+  "day_type": "training day",
+  "targets": {
+    "calories": 3125,
+    "protein_g": 175,
+    "carbs_g": 411,
+    "fats_g": 87
+  },
+  "day_plan": {
+    "date": "2024-01-15",
+    "day_type": "training day",
+    "total_targets": {
+      "calories": 3125,
+      "protein_g": 175,
+      "carbs_g": 411,
+      "fats_g": 87
+    },
+    "meals": [
+      {
+        "meal_number": 1,
+        "time": "12:00 PM",
+        "name": "Chicken and Rice Bowl",
+        "description": "Grilled chicken breast served over a bed of white rice with steamed broccoli.",
+        "calories": 937,
+        "protein_g": 53,
+        "carbs_g": 123,
+        "fats_g": 26,
+        "fiber_g": 5,
+        "ingredients": [
+          {
+            "name": "Grilled chicken breast",
+            "amount": 170,
+            "unit": "g",
+            "calories": 280,
+            "protein_g": 52,
+            "carbs_g": 0,
+            "fats_g": 6
+          },
+          {
+            "name": "White rice",
+            "amount": 300,
+            "unit": "g",
+            "calories": 390,
+            "protein_g": 8.1,
+            "carbs_g": 84,
+            "fats_g": 0.9
+          },
+          {
+            "name": "Steamed broccoli",
+            "amount": 100,
+            "unit": "g",
+            "calories": 34,
+            "protein_g": 2.8,
+            "carbs_g": 6.6,
+            "fats_g": 0.4
+          },
+          {
+            "name": "Olive oil",
+            "amount": 15,
+            "unit": "g",
+            "calories": 133,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 15
+          },
+          {
+            "name": "Soy sauce",
+            "amount": 30,
+            "unit": "g",
+            "calories": 100,
+            "protein_g": 0.1,
+            "carbs_g": 32.4,
+            "fats_g": 4
+          }
+        ],
+        "instructions": [
+          "Grill the chicken breast until fully cooked.",
+          "Steam the broccoli.",
+          "Cook the rice according to package instructions.",
+          "Combine all ingredients in a bowl and drizzle with olive oil and soy sauce."
+        ],
+        "prep_tips": "Store in an airtight container and refrigerate. Reheat in the microwave before serving."
+      },
+      {
+        "meal_number": 2,
+        "time": "4:30 PM",
+        "name": "Sweet Potato and Avocado Salad",
+        "description": "Roasted sweet potato cubes with mixed greens, avocado, and a light vinaigrette.",
+        "calories": 1093,
+        "protein_g": 56,
+        "carbs_g": 145,
+        "fats_g": 32,
+        "fiber_g": 17,
+        "ingredients": [
+          {
+            "name": "Sweet potato",
+            "amount": 400,
+            "unit": "g",
+            "calories": 360,
+            "protein_g": 8,
+            "carbs_g": 84,
+            "fats_g": 0.4
+          },
+          {
+            "name": "Mixed greens",
+            "amount": 150,
+            "unit": "g",
+            "calories": 23,
+            "protein_g": 2.3,
+            "carbs_g": 3.8,
+            "fats_g": 0.4
+          },
+          {
+            "name": "Avocado",
+            "amount": 150,
+            "unit": "g",
+            "calories": 240,
+            "protein_g": 3,
+            "carbs_g": 13.5,
+            "fats_g": 22.5
+          },
+          {
+            "name": "Grilled chicken breast",
+            "amount": 150,
+            "unit": "g",
+            "calories": 247.5,
+            "protein_g": 46.5,
+            "carbs_g": 0,
+            "fats_g": 5.4
+          },
+          {
+            "name": "Balsamic vinaigrette",
+            "amount": 30,
+            "unit": "g",
+            "calories": 223,
+            "protein_g": 0.2,
+            "carbs_g": 4.7,
+            "fats_g": 23.7
+          }
+        ],
+        "instructions": [
+          "Roast the sweet potato cubes until tender.",
+          "Grill the chicken breast.",
+          "Toss the mixed greens, roasted sweet potato, sliced avocado, and grilled chicken.",
+          "Drizzle with balsamic vinaigrette."
+        ],
+        "prep_tips": "Best if salad components are stored separately and assembled before eating to maintain freshness."
+      },
+      {
+        "meal_number": 3,
+        "time": "7:30 PM",
+        "name": "Pasta with Meat Sauce",
+        "description": "Whole wheat pasta topped with a hearty meat sauce and a side of garlic bread.",
+        "calories": 1095,
+        "protein_g": 66,
+        "carbs_g": 143,
+        "fats_g": 29,
+        "fiber_g": 10,
+        "ingredients": [
+          {
+            "name": "Whole wheat pasta",
+            "amount": 200,
+            "unit": "g",
+            "calories": 280,
+            "protein_g": 10,
+            "carbs_g": 58,
+            "fats_g": 1.5
+          },
+          {
+            "name": "Ground turkey",
+            "amount": 200,
+            "unit": "g",
+            "calories": 320,
+            "protein_g": 48,
+            "carbs_g": 0,
+            "fats_g": 16
+          },
+          {
+            "name": "Tomato sauce",
+            "amount": 200,
+            "unit": "g",
+            "calories": 72,
+            "protein_g": 2,
+            "carbs_g": 13,
+            "fats_g": 2
+          },
+          {
+            "name": "Olive oil",
+            "amount": 10,
+            "unit": "g",
+            "calories": 88,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 10
+          },
+          {
+            "name": "Whole wheat bread",
+            "amount": 60,
+            "unit": "g",
+            "calories": 165,
+            "protein_g": 6,
+            "carbs_g": 29,
+            "fats_g": 2
+          },
+          {
+            "name": "Garlic butter",
+            "amount": 20,
+            "unit": "g",
+            "calories": 170,
+            "protein_g": 0,
+            "carbs_g": 0,
+            "fats_g": 19
+          }
+        ],
+        "instructions": [
+          "Cook the whole wheat pasta according to package instructions.",
+          "Brown the ground turkey in olive oil, add tomato sauce, and simmer.",
+          "Spread garlic butter on whole wheat bread and toast until golden.",
+          "Serve the pasta topped with meat sauce and a side of garlic bread."
+        ],
+        "prep_tips": "Pasta and meat sauce can be stored separately in the fridge. Reheat together before serving. Garlic bread is best made fresh."
+      }
+    ],
+    "daily_totals": {
+      "calories": 3125,
+      "protein_g": 175,
+      "carbs_g": 411,
+      "fats_g": 87
+    },
+    "accuracy_check": {
+      "calories_accuracy": 100,
+      "protein_accuracy": 100,
+      "carbs_accuracy": 100,
+      "fats_accuracy": 100
+    }
+  }
+}

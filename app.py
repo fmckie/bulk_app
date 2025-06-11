@@ -908,10 +908,6 @@ def test_generate_meal_plan():
         'gender': profile['gender'],
         'dietary_requirements': data.get('dietary_requirements', []),
         'budget': data.get('budget', 150),
-        'store_preference': data.get('store_preference', 'Whole Foods'),
-        'exclusions': data.get('exclusions', []),
-        'cooking_time': data.get('cooking_time', 45),
-        'variety': data.get('variety', 'medium'),
         'training_days': ['Monday', 'Wednesday', 'Friday']
     }
     
@@ -951,7 +947,6 @@ def generate_meal_plan():
             'gender': profile['gender'],
             'dietary_requirements': data.get('dietary_requirements', []),
             'budget': data.get('budget', 150),
-            'store_preference': data.get('store_preference', 'Local Grocery'),
             'training_days': ['Monday', 'Wednesday', 'Friday']
         }
         
@@ -988,10 +983,6 @@ def generate_meal_plan():
                     'gender': profile.get('gender', 'male'),
                     'dietary_requirements': data.get('dietary_requirements', []),
                     'budget': data.get('budget', 150),
-                    'store_preference': data.get('store_preference', 'Local Grocery'),
-                    'exclusions': data.get('exclusions', []),
-                    'cooking_time': data.get('cooking_time', 45),
-                    'variety': data.get('variety', 'medium'),
                     'training_days': ['Monday', 'Wednesday', 'Friday'],  # Get from workout schedule
                     'preferences': preferences
                 }
