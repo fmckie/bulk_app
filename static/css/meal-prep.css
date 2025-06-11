@@ -304,11 +304,49 @@
     display: flex;
     gap: 0.5rem;
     margin-top: 1rem;
+    flex-wrap: wrap;
 }
 
 .meal-actions button {
     padding: 0.5rem 1rem;
     font-size: 0.875rem;
+    flex: 1;
+    min-width: 90px;
+}
+
+.meal-actions .btn-recipe {
+    background: var(--secondary-color);
+    color: white;
+}
+
+.meal-actions .btn-recipe:hover {
+    background: #1976D2;
+    transform: translateY(-1px);
+}
+
+/* Mobile optimization for three buttons */
+@media (max-width: 480px) {
+    .meal-actions button {
+        font-size: 0.75rem;
+        padding: 0.4rem 0.8rem;
+        min-width: 70px;
+    }
+    
+    .meal-actions button i {
+        margin-right: 0.3rem;
+    }
+    
+    /* Hide button text on very small screens, show only icons */
+    @media (max-width: 360px) {
+        .meal-actions button {
+            min-width: auto;
+            padding: 0.5rem;
+        }
+        
+        .meal-actions button span {
+            display: none;
+        }
+    }
 }
 
 /* Shopping List */
@@ -510,6 +548,102 @@
 
 .close:hover {
     color: var(--text);
+}
+
+/* Recipe Modal Enhancements */
+.recipe-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+.recipe-header h2 {
+    margin: 0;
+}
+
+.btn-print {
+    background: var(--secondary-color);
+    color: white;
+    border: none;
+    padding: 0.5rem 1rem;
+    border-radius: 6px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    transition: all 0.3s ease;
+}
+
+.btn-print:hover {
+    background: #1976D2;
+    transform: translateY(-1px);
+}
+
+.recipe-stats {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
+    flex-wrap: wrap;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border);
+}
+
+.recipe-stats span {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    color: var(--text-secondary);
+}
+
+.nutrition-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+    gap: 1rem;
+    margin-top: 1rem;
+    background: var(--background);
+    padding: 1rem;
+    border-radius: 8px;
+}
+
+.usda-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-top: 1rem;
+    padding: 0.5rem 1rem;
+    background: rgba(76, 175, 80, 0.1);
+    color: var(--primary);
+    border-radius: 20px;
+    font-size: 0.875rem;
+    font-weight: 600;
+}
+
+.recipe-ingredients,
+.recipe-instructions,
+.recipe-tips {
+    margin-top: 2rem;
+}
+
+.recipe-ingredients ul,
+.recipe-instructions ol {
+    margin-top: 1rem;
+    margin-left: 1.5rem;
+}
+
+.recipe-ingredients li,
+.recipe-instructions li {
+    margin-bottom: 0.75rem;
+    line-height: 1.6;
+}
+
+.recipe-tips {
+    background: var(--background);
+    padding: 1.5rem;
+    border-radius: 8px;
+    border-left: 3px solid var(--primary);
 }
 
 /* AI Chat */
