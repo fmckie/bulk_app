@@ -661,7 +661,8 @@ def get_user():
         return jsonify({'error': 'Authentication requires Supabase configuration.'}), 503
     
     # Apply login_required decorator conditionally
-    from auth import login_required, get_current_user_id, ProfileDB
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB
     
     @login_required
     def _get_user_impl():
@@ -784,6 +785,11 @@ def auth_callback():
         logger.error(f"Auth callback error: {str(e)}")
         return redirect(url_for('login', error='auth_failed'))
 
+@app.route('/meal-prep')
+def meal_prep():
+    """AI-Powered Meal Prep Planner page"""
+    return render_template('meal-prep.html')
+
 @app.route('/api/news', methods=['GET'])
 def get_news():
     """Get news articles from md-pilot.com"""
@@ -877,6 +883,327 @@ def get_news():
             'articles': [],
             'error': 'Failed to fetch news articles'
         }), 500
+
+# Meal Prep API Routes
+@app.route('/api/meal-prep/test-generate', methods=['POST'])
+def test_generate_meal_plan():
+    """Test endpoint for meal plan generation without auth"""
+    from services.openai_meal_service import OpenAIMealService
+    from services.meal_prep_service import MealPrepService
+    
+    data = request.json
+    
+    # Use test user profile
+    profile = {
+        'body_weight': 187,  # 85kg in lbs
+        'age': 23,
+        'gender': 'male'
+    }
+    
+    # Generate meal plan
+    ai_service = OpenAIMealService()
+    user_data = {
+        'body_weight': profile['body_weight'],
+        'age': profile['age'],
+        'gender': profile['gender'],
+        'dietary_requirements': data.get('dietary_requirements', []),
+        'budget': data.get('budget', 150),
+        'store_preference': data.get('store_preference', 'Whole Foods'),
+        'exclusions': data.get('exclusions', []),
+        'cooking_time': data.get('cooking_time', 45),
+        'variety': data.get('variety', 'medium'),
+        'training_days': ['Monday', 'Wednesday', 'Friday']
+    }
+    
+    # Check if AI is requested and available
+    use_ai = data.get('use_ai', True)
+    if use_ai and ai_service.is_available():
+        meal_plan = ai_service.generate_meal_plan(user_data)
+    else:
+        # Use demo meal plan
+        meal_plan = ai_service._get_demo_meal_plan(user_data)
+    
+    return jsonify(meal_plan)
+
+@app.route('/api/meal-prep/generate', methods=['POST'])
+def generate_meal_plan():
+    """Generate AI-powered meal plan"""
+    if DEMO_MODE:
+        # Demo mode implementation
+        from services.openai_meal_service import OpenAIMealService
+        from services.meal_prep_service import MealPrepService
+        
+        user_id = 'demo-user'
+        data = request.json
+        
+        # Get demo user profile
+        profile = {
+            'body_weight': 175,
+            'age': 25,
+            'gender': 'male'
+        }
+        
+        # Generate meal plan
+        ai_service = OpenAIMealService()
+        user_data = {
+            'body_weight': profile['body_weight'],
+            'age': profile['age'],
+            'gender': profile['gender'],
+            'dietary_requirements': data.get('dietary_requirements', []),
+            'budget': data.get('budget', 150),
+            'store_preference': data.get('store_preference', 'Local Grocery'),
+            'training_days': ['Monday', 'Wednesday', 'Friday']
+        }
+        
+        meal_plan = ai_service.generate_meal_plan(user_data)
+        return jsonify(meal_plan)
+    else:
+        from auth import login_required, get_current_user_id
+        from database.connection import ProfileDB
+        from services.openai_meal_service import OpenAIMealService
+        from services.meal_prep_service import MealPrepService
+        
+        @login_required
+        def _generate_meal_plan():
+            try:
+                user_id = get_current_user_id()
+                data = request.json
+                
+                # Get user profile
+                profile = ProfileDB.get_profile(user_id)
+                if not profile or not profile.get('body_weight'):
+                    return jsonify({
+                        'error': 'Please update your body weight in your profile first'
+                    }), 400
+                
+                # Get user preferences
+                from database.meal_prep_db import MealPrepDBStatic
+                from database.connection import supabase
+                preferences = MealPrepDBStatic.get_user_preferences(supabase, user_id)
+                
+                # Prepare user data for AI
+                user_data = {
+                    'body_weight': float(profile['body_weight']),
+                    'age': profile.get('age', 25),
+                    'gender': profile.get('gender', 'male'),
+                    'dietary_requirements': data.get('dietary_requirements', []),
+                    'budget': data.get('budget', 150),
+                    'store_preference': data.get('store_preference', 'Local Grocery'),
+                    'exclusions': data.get('exclusions', []),
+                    'cooking_time': data.get('cooking_time', 45),
+                    'variety': data.get('variety', 'medium'),
+                    'training_days': ['Monday', 'Wednesday', 'Friday'],  # Get from workout schedule
+                    'preferences': preferences
+                }
+                
+                # Generate meal plan with AI
+                ai_service = OpenAIMealService()
+                
+                if data.get('use_ai', True) and ai_service.is_available():
+                    meal_plan_data = ai_service.generate_meal_plan(user_data)
+                else:
+                    # Use demo plan if AI is disabled or unavailable
+                    meal_plan_data = ai_service._get_demo_meal_plan(user_data)
+                
+                # Save to database if requested
+                if data.get('save', False):
+                    prep_service = MealPrepService(supabase)
+                    result = prep_service.create_meal_plan(user_id, meal_plan_data)
+                    if result['success']:
+                        meal_plan_data['meal_plan_id'] = result['meal_plan_id']
+                
+                return jsonify(meal_plan_data)
+                
+            except Exception as e:
+                logger.error(f"Error generating meal plan: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+        
+        return _generate_meal_plan()
+
+@app.route('/api/meal-prep/plans', methods=['GET'])
+def get_meal_plans():
+    """Get user's saved meal plans"""
+    if DEMO_MODE:
+        # Return demo plans
+        return jsonify([
+            {
+                'id': 'demo-plan-1',
+                'name': 'Demo Meal Plan - Week 1',
+                'created_at': datetime.now().isoformat(),
+                'status': 'active',
+                'budget': 150
+            }
+        ])
+    else:
+        from auth import login_required, get_current_user_id
+        from database.meal_prep_db import MealPrepDBStatic
+        from database.connection import supabase
+        
+        @login_required
+        def _get_meal_plans():
+            try:
+                user_id = get_current_user_id()
+                plans = MealPrepDBStatic.get_user_meal_plans(supabase, user_id)
+                return jsonify(plans)
+            except Exception as e:
+                logger.error(f"Error getting meal plans: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+        
+        return _get_meal_plans()
+
+@app.route('/api/meal-prep/plan/<plan_id>', methods=['GET'])
+def get_meal_plan(plan_id):
+    """Get specific meal plan details"""
+    if DEMO_MODE:
+        # Return demo plan details
+        from services.openai_meal_service import OpenAIMealService
+        ai_service = OpenAIMealService()
+        return jsonify(ai_service._get_demo_meal_plan({'body_weight': 175}))
+    else:
+        from auth import login_required, get_current_user_id
+        from services.meal_prep_service import MealPrepService
+        from database.connection import supabase
+        
+        @login_required
+        def _get_meal_plan():
+            try:
+                user_id = get_current_user_id()
+                prep_service = MealPrepService(supabase)
+                meal_plan = prep_service.get_meal_plan(plan_id, user_id)
+                
+                if meal_plan:
+                    return jsonify(meal_plan)
+                else:
+                    return jsonify({'error': 'Meal plan not found'}), 404
+                    
+            except Exception as e:
+                logger.error(f"Error getting meal plan: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+        
+        return _get_meal_plan()
+
+@app.route('/api/meal-prep/save', methods=['POST'])
+def save_meal_plan():
+    """Save a generated meal plan"""
+    if DEMO_MODE:
+        return jsonify({
+            'success': True,
+            'meal_plan_id': 'demo-plan-' + str(datetime.now().timestamp())
+        })
+    else:
+        from auth import login_required, get_current_user_id
+        from services.meal_prep_service import MealPrepService
+        from database.connection import supabase
+        
+        @login_required
+        def _save_meal_plan():
+            try:
+                user_id = get_current_user_id()
+                data = request.json
+                
+                prep_service = MealPrepService(supabase)
+                result = prep_service.create_meal_plan(user_id, data['meal_plan'])
+                
+                if result['success']:
+                    return jsonify(result)
+                else:
+                    return jsonify({'error': result.get('error', 'Failed to save')}), 400
+                    
+            except Exception as e:
+                logger.error(f"Error saving meal plan: {str(e)}")
+                return jsonify({'error': str(e)}), 500
+        
+        return _save_meal_plan()
+
+@app.route('/api/meal-prep/research-recipe', methods=['POST'])
+def research_recipe():
+    """Use AI to research nutritional facts for a custom recipe"""
+    from services.openai_meal_service import OpenAIMealService
+    
+    try:
+        data = request.json
+        ingredients = data.get('ingredients', [])
+        servings = data.get('servings', 1)
+        
+        ai_service = OpenAIMealService()
+        nutrition_facts = ai_service.research_nutrition_facts(ingredients, servings)
+        
+        return jsonify(nutrition_facts)
+        
+    except Exception as e:
+        logger.error(f"Error researching recipe: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/meal-prep/swap-meal', methods=['POST'])
+def swap_meal():
+    """Swap a meal with an alternative"""
+    from services.openai_meal_service import OpenAIMealService
+    
+    try:
+        data = request.json
+        current_meal = data.get('current_meal')
+        meal_type = data.get('meal_type')
+        dietary_requirements = data.get('dietary_requirements', [])
+        
+        # For now, return a simple alternative
+        # In production, this would use AI to generate a suitable alternative
+        new_meal = {
+            'name': 'Alternative ' + current_meal.get('name', 'Meal'),
+            'meal_type': meal_type,
+            'calories': current_meal.get('calories', 500),
+            'protein_g': current_meal.get('protein_g', 40),
+            'carbs_g': current_meal.get('carbs_g', 50),
+            'fats_g': current_meal.get('fats_g', 15),
+            'time': current_meal.get('time', '12:00 PM'),
+            'description': 'A delicious alternative meal',
+            'ingredients': [
+                {'name': 'Alternative protein', 'amount': 6, 'unit': 'oz'},
+                {'name': 'Alternative carb', 'amount': 1, 'unit': 'cup'}
+            ],
+            'instructions': ['Prepare ingredients', 'Cook and enjoy'],
+            'prep_time': 20,
+            'cook_time': 25
+        }
+        
+        return jsonify({'new_meal': new_meal})
+        
+    except Exception as e:
+        logger.error(f"Error swapping meal: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/meal-prep/chat', methods=['POST'])
+def meal_prep_chat():
+    """AI chat assistant for meal prep"""
+    from services.openai_meal_service import OpenAIMealService
+    
+    try:
+        data = request.json
+        message = data.get('message', '')
+        context = data.get('context', {})
+        
+        # Simple response for now
+        # In production, this would use OpenAI to generate contextual responses
+        responses = {
+            'customize': 'I can help you customize this meal. What dietary preferences or restrictions should I consider?',
+            'substitute': 'I can suggest substitutions. What ingredient would you like to replace?',
+            'nutrition': 'This meal provides balanced macronutrients optimized for your fitness goals.',
+            'default': 'I can help with meal customization, substitutions, or nutritional information. What would you like to know?'
+        }
+        
+        # Simple keyword matching
+        response_key = 'default'
+        if 'customize' in message.lower():
+            response_key = 'customize'
+        elif 'substitute' in message.lower() or 'replace' in message.lower():
+            response_key = 'substitute'
+        elif 'nutrition' in message.lower() or 'calories' in message.lower():
+            response_key = 'nutrition'
+        
+        return jsonify({'response': responses[response_key]})
+        
+    except Exception as e:
+        logger.error(f"Error in meal prep chat: {str(e)}")
+        return jsonify({'error': str(e)}), 500
 
 # Error handlers
 @app.errorhandler(404)

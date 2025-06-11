@@ -12,6 +12,29 @@ This is the Kinobody Greek God Program Fitness Tracker - a mobile-first web appl
 
 ## Commands
 
+### Claude Code Configuration
+```bash
+# Configure Claude Code to run without confirmation prompts by default
+# Add this alias to your shell configuration file (~/.zshrc or ~/.bashrc)
+alias claude='claude --no-confirm'
+
+# Apply the configuration (for zsh)
+source ~/.zshrc
+
+# Apply the configuration (for bash)
+source ~/.bashrc
+
+# Verify the alias is working
+alias | grep claude
+# Should output: claude='claude --no-confirm'
+
+# Usage: Now you can run Claude normally and it will auto-include --no-confirm
+claude "your prompt here"
+
+# If you ever need to run WITH confirmations, use the full path:
+/Users/willmckie/.npm-global/bin/claude "your prompt"
+```
+
 ### Local Development
 ```bash
 # Start Flask application

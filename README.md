@@ -6,6 +6,7 @@ A mobile-first web application designed specifically for tracking progress on th
 
 - **Workout Tracking**: Log your Reverse Pyramid Training (RPT) workouts with automatic weight calculations
 - **Nutrition Monitoring**: Track daily calories and macros with calorie cycling support
+- **AI-Powered Meal Prep**: Generate personalized 7-day meal plans with OpenAI GPT-4
 - **Progress Visualization**: Charts and graphs to monitor strength gains and body measurements
 - **Mobile Optimized**: Designed for seamless use on mobile devices (425px+ width)
 - **Offline Support**: Full functionality without internet connection
@@ -52,6 +53,8 @@ docker run -d -p 80:80 kinobody-tracker
 - **Frontend**: Vanilla HTML5, CSS3, JavaScript (ES6+)
 - **Backend**: Python (Flask/FastAPI)
 - **Database**: Supabase (PostgreSQL with OAuth)
+- **AI Integration**: OpenAI GPT-4 Mini for meal planning
+- **Caching**: Upstash Redis for performance
 - **Data Visualization**: Chart.js
 - **Storage**: Local Storage API (offline support)
 - **Deployment**: Docker (nginx:alpine) + DigitalOcean
@@ -79,6 +82,17 @@ bulk_app/
 ```
 
 ## New Features
+
+### AI-Powered Meal Prep Planner
+Access the intelligent meal planning system at `/meal-prep`. Features include:
+- **Personalized Meal Plans**: AI generates 7-day plans based on your fitness goals
+- **Dietary Customization**: Supports vegetarian, vegan, keto, paleo, and more
+- **Budget Optimization**: Plans meals within your specified weekly budget
+- **Smart Shopping Lists**: Organized by store sections with cost estimates
+- **Nutritional Precision**: Meals calculated for training days (+500 cal) and rest days (+100 cal)
+- **AI Chat Assistant**: Real-time help for customizations and substitutions
+- **Recipe Analysis**: Get instant nutrition facts for any recipe
+- **Meal Prep Schedule**: Optimized cooking timeline for efficiency
 
 ### Epic Dashboard - "Forge of Gods"
 Access the revolutionary new dashboard design at `/dashboard-epic`. Features include:

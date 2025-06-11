@@ -1,0 +1,261 @@
+{% extends "base.html" %}
+
+{% block title %}AI Meal Prep Planner - Kinobody Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/meal-prep.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="page-header">
+        <h1>AI-Powered Meal Prep Planner</h1>
+        <p class="subtitle">Create your personalized 7-day meal plan</p>
+    </div>
+
+    <!-- Meal Plan Generation Form -->
+    <div class="generation-section" id="generationSection">
+        <div class="card">
+            <h2>Generate Your Meal Plan</h2>
+            <form id="mealPlanForm" class="meal-plan-form">
+                <div class="form-grid">
+                    <!-- Dietary Requirements -->
+                    <div class="form-group full-width">
+                        <label>Dietary Requirements</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="dietary_requirements" value="vegetarian">
+                                <span>Vegetarian</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="dietary_requirements" value="vegan">
+                                <span>Vegan</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="dietary_requirements" value="gluten-free">
+                                <span>Gluten-Free</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="dietary_requirements" value="dairy-free">
+                                <span>Dairy-Free</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="dietary_requirements" value="keto">
+                                <span>Keto</span>
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="dietary_requirements" value="paleo">
+                                <span>Paleo</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Budget -->
+                    <div class="form-group">
+                        <label for="budget">Weekly Budget ($)</label>
+                        <input type="number" id="budget" name="budget" min="50" max="500" value="150" required>
+                        <span class="help-text">Typical range: $100-200/week</span>
+                    </div>
+
+                    <!-- Store Preference -->
+                    <div class="form-group">
+                        <label for="store">Preferred Store</label>
+                        <select id="store" name="store" required>
+                            <option value="">Select a store...</option>
+                            <option value="Whole Foods">Whole Foods</option>
+                            <option value="Trader Joe's">Trader Joe's</option>
+                            <option value="Kroger">Kroger</option>
+                            <option value="Safeway">Safeway</option>
+                            <option value="Walmart">Walmart</option>
+                            <option value="Target">Target</option>
+                            <option value="Costco">Costco</option>
+                            <option value="Local Grocery">Local Grocery Store</option>
+                        </select>
+                    </div>
+
+                    <!-- Allergies/Exclusions -->
+                    <div class="form-group full-width">
+                        <label for="exclusions">Allergies or Foods to Avoid</label>
+                        <input type="text" id="exclusions" name="exclusions" 
+                               placeholder="e.g., nuts, shellfish, eggs (comma-separated)">
+                    </div>
+
+                    <!-- Cooking Preferences -->
+                    <div class="form-group">
+                        <label for="cookingTime">Max Cooking Time</label>
+                        <select id="cookingTime" name="cooking_time">
+                            <option value="30">30 minutes</option>
+                            <option value="45" selected>45 minutes</option>
+                            <option value="60">1 hour</option>
+                            <option value="90">1.5 hours</option>
+                        </select>
+                    </div>
+
+                    <!-- Meal Variety -->
+                    <div class="form-group">
+                        <label for="variety">Meal Variety</label>
+                        <select id="variety" name="variety">
+                            <option value="high">High (different meals daily)</option>
+                            <option value="medium" selected>Medium (some repetition)</option>
+                            <option value="low">Low (meal prep efficiency)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- AI Assistant Toggle -->
+                <div class="ai-assistant-toggle">
+                    <label class="toggle-label">
+                        <input type="checkbox" id="aiAssistant" checked>
+                        <span>Use AI Assistant for personalized recommendations</span>
+                    </label>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-lg">
+                    <i class="fas fa-magic"></i> Generate Meal Plan
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Loading State -->
+    <div class="loading-state" id="loadingState" style="display: none;">
+        <div class="ai-loader">
+            <div class="spinner"></div>
+            <h3>AI is creating your personalized meal plan...</h3>
+            <p>Analyzing nutritional requirements...</p>
+            <p class="loading-message" id="loadingMessage">Optimizing for your budget and preferences...</p>
+        </div>
+    </div>
+
+    <!-- Generated Meal Plan -->
+    <div class="meal-plan-section" id="mealPlanSection" style="display: none;">
+        <!-- Meal Plan Header -->
+        <div class="meal-plan-header">
+            <h2>Your 7-Day Meal Plan</h2>
+            <div class="plan-actions">
+                <button class="btn btn-secondary" id="savePlanBtn">
+                    <i class="fas fa-save"></i> Save Plan
+                </button>
+                <button class="btn btn-secondary" id="exportPlanBtn">
+                    <i class="fas fa-download"></i> Export PDF
+                </button>
+                <button class="btn btn-secondary" id="regenerateBtn">
+                    <i class="fas fa-redo"></i> Regenerate
+                </button>
+            </div>
+        </div>
+
+        <!-- Nutritional Summary -->
+        <div class="nutrition-summary card">
+            <h3>Weekly Nutrition Overview</h3>
+            <div class="summary-grid">
+                <div class="summary-item">
+                    <span class="label">Avg Daily Calories</span>
+                    <span class="value" id="avgCalories">-</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Avg Daily Protein</span>
+                    <span class="value" id="avgProtein">-</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Training Day Calories</span>
+                    <span class="value" id="trainingCalories">-</span>
+                </div>
+                <div class="summary-item">
+                    <span class="label">Rest Day Calories</span>
+                    <span class="value" id="restCalories">-</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Day Tabs -->
+        <div class="day-tabs">
+            <button class="day-tab active" data-day="1">Day 1</button>
+            <button class="day-tab" data-day="2">Day 2</button>
+            <button class="day-tab" data-day="3">Day 3</button>
+            <button class="day-tab" data-day="4">Day 4</button>
+            <button class="day-tab" data-day="5">Day 5</button>
+            <button class="day-tab" data-day="6">Day 6</button>
+            <button class="day-tab" data-day="7">Day 7</button>
+        </div>
+
+        <!-- Day Content -->
+        <div class="day-content" id="dayContent">
+            <!-- Content will be dynamically loaded -->
+        </div>
+
+        <!-- Shopping List -->
+        <div class="shopping-list-section card">
+            <h3>Shopping List</h3>
+            <div class="shopping-header">
+                <div class="total-cost">
+                    <span>Estimated Total:</span>
+                    <span class="cost-value" id="totalCost">$0.00</span>
+                </div>
+                <button class="btn btn-secondary" id="printListBtn">
+                    <i class="fas fa-print"></i> Print List
+                </button>
+            </div>
+            <div class="shopping-categories" id="shoppingList">
+                <!-- Shopping list will be dynamically loaded -->
+            </div>
+        </div>
+
+        <!-- Meal Prep Schedule -->
+        <div class="prep-schedule card">
+            <h3>Meal Prep Schedule</h3>
+            <div id="prepSchedule" class="schedule-content">
+                <!-- Schedule will be dynamically loaded -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Saved Plans -->
+    <div class="saved-plans-section">
+        <h3>Your Saved Meal Plans</h3>
+        <div class="saved-plans-grid" id="savedPlans">
+            <!-- Saved plans will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- Recipe Detail Modal -->
+<div class="modal" id="recipeModal" style="display: none;">
+    <div class="modal-content">
+        <span class="close">&times;</span>
+        <div id="recipeDetails">
+            <!-- Recipe details will be loaded here -->
+        </div>
+    </div>
+</div>
+
+<!-- AI Chat Assistant -->
+<div class="ai-chat" id="aiChat" style="display: none;">
+    <div class="chat-header">
+        <h4>AI Meal Assistant</h4>
+        <button class="chat-close" id="chatClose">&times;</button>
+    </div>
+    <div class="chat-messages" id="chatMessages">
+        <div class="chat-message assistant">
+            <p>Hi! I can help you customize your meal plan. Ask me about substitutions, nutritional information, or cooking tips!</p>
+        </div>
+    </div>
+    <div class="chat-input">
+        <input type="text" id="chatInput" placeholder="Ask me anything...">
+        <button id="chatSend"><i class="fas fa-paper-plane"></i></button>
+    </div>
+</div>
+
+<!-- Float AI Assistant Button -->
+<button class="ai-fab" id="aiFab" title="AI Assistant">
+    <i class="fas fa-robot"></i>
+</button>
+
+<!-- Success/Error Messages -->
+<div class="message-toast" id="messageToast"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/meal-prep.js') }}"></script>
+{% endblock %}
