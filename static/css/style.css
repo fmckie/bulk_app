@@ -85,6 +85,15 @@ body {
     gap: 0.5rem;
     color: var(--text-secondary);
     font-size: 0.875rem;
+    text-decoration: none;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background-color 0.2s ease;
+}
+
+.nav-user:hover {
+    background-color: var(--hover-bg);
+    color: var(--text-primary);
 }
 
 .nav-user i {

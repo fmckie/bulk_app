@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block title %}Profile - Kinobody Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="{{ url_for('static', filename='css/profile.css') }}">
+{% endblock %}
+
+{% block content %}
+<div class="profile-container">
+    <div class="profile-header">
+        <h1>My Profile</h1>
+        <button class="btn btn-secondary" id="editProfileBtn">
+            <i class="fas fa-edit"></i> Edit Profile
+        </button>
+    </div>
+
+    <!-- Profile Content -->
+    <div class="profile-content">
+        <!-- User Info Section -->
+        <div class="profile-section">
+            <h2 class="section-title">Account Information</h2>
+            <div class="profile-card">
+                <div class="profile-avatar-section">
+                    <div class="avatar-container">
+                        <img id="userAvatar" src="/static/img/default-avatar.svg" alt="Profile Picture" class="user-avatar">
+                        <div class="avatar-upload-overlay" style="display: none;">
+                            <label for="avatarUpload" class="avatar-upload-label">
+                                <i class="fas fa-camera"></i>
+                                <span>Change Photo</span>
+                            </label>
+                            <input type="file" id="avatarUpload" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="profile-info">
+                    <div class="info-group">
+                        <label>Email</label>
+                        <div class="info-value" id="userEmail">Loading...</div>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label>Username</label>
+                        <div class="info-value editable">
+                            <span id="username">Not set</span>
+                            <input type="text" id="usernameInput" class="form-control edit-input" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label>Full Name</label>
+                        <div class="info-value editable">
+                            <span id="fullName">Not set</span>
+                            <input type="text" id="fullNameInput" class="form-control edit-input" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="info-group">
+                        <label>Member Since</label>
+                        <div class="info-value" id="memberSince">Loading...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Fitness Metrics Section -->
+        <div class="profile-section">
+            <h2 class="section-title">Fitness Metrics</h2>
+            <div class="profile-card">
+                <div class="metrics-grid">
+                    <div class="metric-item">
+                        <label>Body Weight</label>
+                        <div class="metric-value editable">
+                            <span id="bodyWeight">Not set</span>
+                            <span class="metric-unit">lbs</span>
+                            <input type="number" id="bodyWeightInput" class="form-control edit-input" min="50" max="500" step="0.1" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <label>Body Fat %</label>
+                        <div class="metric-value editable">
+                            <span id="bodyFat">Not set</span>
+                            <span class="metric-unit">%</span>
+                            <input type="number" id="bodyFatInput" class="form-control edit-input" min="3" max="50" step="0.1" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <label>Program Start Date</label>
+                        <div class="metric-value editable">
+                            <span id="programStartDate">Not set</span>
+                            <input type="date" id="programStartDateInput" class="form-control edit-input" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="metric-item">
+                        <label>Activity Level</label>
+                        <div class="metric-value editable">
+                            <span id="activityLevel">Not set</span>
+                            <select id="activityLevelInput" class="form-control edit-input" style="display: none;">
+                                <option value="">Select...</option>
+                                <option value="sedentary">Sedentary</option>
+                                <option value="lightly_active">Lightly Active</option>
+                                <option value="moderately_active">Moderately Active</option>
+                                <option value="very_active">Very Active</option>
+                                <option value="extremely_active">Extremely Active</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Goals Section -->
+        <div class="profile-section">
+            <h2 class="section-title">Fitness Goals</h2>
+            <div class="profile-card">
+                <div class="goals-container">
+                    <div class="goal-item">
+                        <label>Primary Goal</label>
+                        <div class="goal-value editable">
+                            <span id="primaryGoal">Not set</span>
+                            <select id="primaryGoalInput" class="form-control edit-input" style="display: none;">
+                                <option value="">Select...</option>
+                                <option value="muscle_gain">Muscle Gain</option>
+                                <option value="fat_loss">Fat Loss</option>
+                                <option value="strength">Strength Gain</option>
+                                <option value="recomp">Body Recomposition</option>
+                                <option value="maintenance">Maintenance</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="goal-item">
+                        <label>Target Weight</label>
+                        <div class="goal-value editable">
+                            <span id="targetWeight">Not set</span>
+                            <span class="metric-unit">lbs</span>
+                            <input type="number" id="targetWeightInput" class="form-control edit-input" min="50" max="500" step="0.1" style="display: none;">
+                        </div>
+                    </div>
+                    
+                    <div class="goal-item">
+                        <label>Target Body Fat %</label>
+                        <div class="goal-value editable">
+                            <span id="targetBodyFat">Not set</span>
+                            <span class="metric-unit">%</span>
+                            <input type="number" id="targetBodyFatInput" class="form-control edit-input" min="3" max="30" step="0.1" style="display: none;">
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Account Actions Section -->
+        <div class="profile-section">
+            <h2 class="section-title">Account Settings</h2>
+            <div class="profile-card">
+                <div class="account-actions">
+                    <button class="btn btn-secondary" id="changePasswordBtn">
+                        <i class="fas fa-key"></i> Change Password
+                    </button>
+                    <button class="btn btn-secondary" id="exportDataBtn">
+                        <i class="fas fa-download"></i> Export My Data
+                    </button>
+                    <button class="btn btn-danger" id="deleteAccountBtn">
+                        <i class="fas fa-trash"></i> Delete Account
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Edit Actions (shown in edit mode) -->
+    <div class="edit-actions" style="display: none;">
+        <button class="btn btn-primary" id="saveProfileBtn">
+            <i class="fas fa-save"></i> Save Changes
+        </button>
+        <button class="btn btn-secondary" id="cancelEditBtn">
+            <i class="fas fa-times"></i> Cancel
+        </button>
+    </div>
+</div>
+
+<!-- Change Password Modal -->
+<div class="modal" id="changePasswordModal" style="display: none;">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h2>Change Password</h2>
+            <button class="modal-close" onclick="closePasswordModal()">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div class="modal-body">
+            <form id="changePasswordForm">
+                <div class="form-group">
+                    <label for="currentPassword">Current Password</label>
+                    <input type="password" id="currentPassword" class="form-control" required>
+                </div>
+                <div class="form-group">
+                    <label for="newPassword">New Password</label>
+                    <input type="password" id="newPassword" class="form-control" required>
+                    <small class="form-text">At least 8 characters with uppercase, lowercase, and numbers</small>
+                </div>
+                <div class="form-group">
+                    <label for="confirmNewPassword">Confirm New Password</label>
+                    <input type="password" id="confirmNewPassword" class="form-control" required>
+                </div>
+                <div class="modal-actions">
+                    <button type="submit" class="btn btn-primary">Update Password</button>
+                    <button type="button" class="btn btn-secondary" onclick="closePasswordModal()">Cancel</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Alert Container -->
+<div id="alertContainer"></div>
+
+{% endblock %}
+
+{% block extra_scripts %}
+<script src="{{ url_for('static', filename='js/profile.js') }}"></script>
+{% endblock %}

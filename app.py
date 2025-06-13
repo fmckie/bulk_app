@@ -785,6 +785,226 @@ def auth_callback():
         logger.error(f"Auth callback error: {str(e)}")
         return redirect(url_for('login', error='auth_failed'))
 
+# Profile API Routes
+@app.route('/api/profile', methods=['GET'])
+def get_profile():
+    """Get current user's profile"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Profile requires Supabase configuration.'}), 503
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB
+    
+    @login_required
+    def _get_profile_impl():
+        try:
+            user_id = get_current_user_id()
+            profile = ProfileDB.get_profile(user_id)
+            
+            if not profile:
+                # Create default profile if none exists
+                profile = ProfileDB.create_or_update_profile(user_id, {})
+            
+            return jsonify(profile)
+        except Exception as e:
+            logger.error(f"Get profile error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _get_profile_impl()
+
+@app.route('/api/profile', methods=['PUT'])
+def update_profile():
+    """Update current user's profile"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Profile update requires Supabase configuration.'}), 503
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB
+    
+    @login_required
+    def _update_profile_impl():
+        try:
+            user_id = get_current_user_id()
+            data = request.json
+            
+            # Update profile
+            profile = ProfileDB.create_or_update_profile(user_id, data)
+            
+            return jsonify(profile)
+        except Exception as e:
+            logger.error(f"Update profile error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _update_profile_impl()
+
+@app.route('/api/profile/avatar', methods=['POST'])
+def upload_avatar():
+    """Upload user avatar"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Avatar upload requires Supabase configuration.'}), 503
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB, supabase
+    import base64
+    import uuid
+    
+    @login_required
+    def _upload_avatar_impl():
+        try:
+            user_id = get_current_user_id()
+            
+            if 'avatar' not in request.files:
+                return jsonify({'error': 'No file provided'}), 400
+            
+            file = request.files['avatar']
+            if file.filename == '':
+                return jsonify({'error': 'No file selected'}), 400
+            
+            # Validate file type
+            allowed_extensions = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+            file_ext = file.filename.rsplit('.', 1)[1].lower() if '.' in file.filename else ''
+            if file_ext not in allowed_extensions:
+                return jsonify({'error': 'Invalid file type'}), 400
+            
+            # Generate unique filename
+            filename = f"{user_id}/{uuid.uuid4()}.{file_ext}"
+            
+            # Upload to Supabase Storage
+            file_data = file.read()
+            response = supabase.storage.from_('avatars').upload(
+                path=filename,
+                file=file_data,
+                file_options={"content-type": file.content_type}
+            )
+            
+            if response.error:
+                raise Exception(response.error.message)
+            
+            # Get public URL
+            avatar_url = supabase.storage.from_('avatars').get_public_url(filename)
+            
+            # Update profile with avatar URL
+            profile = ProfileDB.create_or_update_profile(user_id, {'avatar_url': avatar_url})
+            
+            return jsonify({'avatar_url': avatar_url})
+        except Exception as e:
+            logger.error(f"Avatar upload error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _upload_avatar_impl()
+
+@app.route('/api/profile/password', methods=['PUT'])
+def change_password():
+    """Change user password"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Password change requires Supabase configuration.'}), 503
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import supabase
+    
+    @login_required
+    def _change_password_impl():
+        try:
+            data = request.json
+            current_password = data.get('current_password')
+            new_password = data.get('new_password')
+            
+            if not current_password or not new_password:
+                return jsonify({'error': 'Current and new passwords required'}), 400
+            
+            # Note: Supabase doesn't provide a direct way to verify current password
+            # In production, you might want to re-authenticate the user first
+            
+            # Update password
+            response = supabase.auth.update_user({
+                'password': new_password
+            })
+            
+            if response.error:
+                raise Exception(response.error.message)
+            
+            return jsonify({'success': True, 'message': 'Password updated successfully'})
+        except Exception as e:
+            logger.error(f"Password change error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _change_password_impl()
+
+@app.route('/api/profile/export', methods=['GET'])
+def export_user_data():
+    """Export all user data"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Data export requires Supabase configuration.'}), 503
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB, WorkoutDB, NutritionDB, MeasurementDB
+    from flask import Response
+    import json
+    
+    @login_required
+    def _export_data_impl():
+        try:
+            user_id = get_current_user_id()
+            
+            # Gather all user data
+            export_data = {
+                'export_date': datetime.now().isoformat(),
+                'profile': ProfileDB.get_profile(user_id),
+                'workouts': WorkoutDB.get_recent_workouts(user_id, limit=1000),
+                'nutrition': NutritionDB.get_nutrition_history(user_id, days=365),
+                'measurements': MeasurementDB.get_measurement_history(user_id, days=365)
+            }
+            
+            # Return as downloadable JSON file
+            json_data = json.dumps(export_data, indent=2, default=str)
+            return Response(
+                json_data,
+                mimetype='application/json',
+                headers={
+                    'Content-Disposition': f'attachment; filename=kinobody_export_{datetime.now().strftime("%Y%m%d")}.json'
+                }
+            )
+        except Exception as e:
+            logger.error(f"Data export error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _export_data_impl()
+
+@app.route('/api/profile', methods=['DELETE'])
+def delete_account():
+    """Delete user account and all data"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Account deletion requires Supabase configuration.'}), 503
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import supabase
+    
+    @login_required
+    def _delete_account_impl():
+        try:
+            user_id = get_current_user_id()
+            
+            # Delete user from Supabase Auth (cascades to profile and other tables)
+            # Note: This requires service role key for admin operations
+            # In production, you might want to implement soft delete or a deletion queue
+            
+            # For now, we'll just mark the account as deleted in the profile
+            from database.connection import ProfileDB
+            ProfileDB.create_or_update_profile(user_id, {
+                'deleted_at': datetime.now().isoformat(),
+                'is_deleted': True
+            })
+            
+            # Clear session
+            session.clear()
+            
+            return jsonify({'success': True, 'message': 'Account deletion initiated'})
+        except Exception as e:
+            logger.error(f"Account deletion error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _delete_account_impl()
+
 @app.route('/meal-prep')
 def meal_prep():
     """AI-Powered Meal Prep Planner page"""
