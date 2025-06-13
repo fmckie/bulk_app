@@ -950,7 +950,7 @@ Provide optimization suggestions in JSON format:
         carbs_calories = total_calories - protein_calories - fats_calories
         carbs_g = round(carbs_calories / 4)
         
-        return {
+        demo_plan = {
             "day_plan": {
                 "date": datetime.now().strftime('%Y-%m-%d'),
                 "day_type": "training day" if is_training_day else "rest day",
@@ -1091,6 +1091,13 @@ Provide optimization suggestions in JSON format:
             },
             "demo_mode": True
         }
+        
+        # Auto-save recipes to database even in demo mode
+        if user_data.get('auto_save_recipes', True) and 'user_id' in user_data:
+            saved_recipe_ids = self._save_recipes_to_database(user_data['user_id'], demo_plan, is_single_day=True)
+            logger.info(f"Demo single day: Saved {len(saved_recipe_ids)} recipes")
+        
+        return demo_plan
     
     def _get_demo_meal_plan(self, user_data: Dict) -> Dict[str, Any]:
         """Return a demo meal plan when AI is not available"""
@@ -1099,7 +1106,7 @@ Provide optimization suggestions in JSON format:
         
         # This is a simplified demo meal plan
         # In production, this would be more comprehensive
-        return {
+        meal_plan = {
             "meal_plan": {
                 "day_1": {
                     "date": datetime.now().isoformat(),
@@ -1207,6 +1214,13 @@ Provide optimization suggestions in JSON format:
             "total_estimated_cost": 120.00,
             "demo_mode": True
         }
+        
+        # Auto-save recipes to database even in demo mode
+        if user_data.get('auto_save_recipes', True) and 'user_id' in user_data:
+            saved_recipe_ids = self._save_recipes_to_database(user_data['user_id'], meal_plan)
+            logger.info(f"Demo mode: Saved {len(saved_recipe_ids)} recipes")
+        
+        return meal_plan
     
     def _save_recipes_to_database(self, user_id: str, meal_plan: Dict, is_single_day: bool = False) -> List[str]:
         """
@@ -1220,12 +1234,26 @@ Provide optimization suggestions in JSON format:
         Returns:
             List of saved recipe IDs
         """
+        logger.info(f"Attempting to save recipes for user: {user_id}")
+        
         try:
             # Import here to avoid circular imports
             from database.connection import supabase
             
             if not supabase:
                 logger.warning("Supabase client not available, skipping recipe save")
+                logger.info("To enable auto-save: Configure SUPABASE_URL and SUPABASE_KEY in .env")
+                
+                # Log what would have been saved
+                recipe_count = 0
+                if is_single_day and 'day_plan' in meal_plan and 'meals' in meal_plan['day_plan']:
+                    recipe_count = len(meal_plan['day_plan']['meals'])
+                elif 'meal_plan' in meal_plan:
+                    for day_key, day_data in meal_plan['meal_plan'].items():
+                        if day_key.startswith('day_') and 'meals' in day_data:
+                            recipe_count += len(day_data['meals'])
+                
+                logger.info(f"Would have saved {recipe_count} recipes if Supabase was connected")
                 return []
             
             saved_recipe_ids = []

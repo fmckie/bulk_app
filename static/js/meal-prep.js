@@ -105,6 +105,7 @@ async function handleFormSubmit(e) {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',  // Include cookies for session auth
             body: JSON.stringify(requestData)
         });
         
@@ -466,6 +467,7 @@ async function saveMealPlan() {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',  // Include cookies for session auth
             body: JSON.stringify({
                 meal_plan: currentMealPlan,
                 name: `Meal Plan - ${new Date().toLocaleDateString()}`
@@ -674,6 +676,7 @@ async function swapMeal(dayNumber, mealKey) {
             headers: {
                 'Content-Type': 'application/json'
             },
+            credentials: 'include',  // Include cookies for session auth
             body: JSON.stringify({
                 current_meal: meal,
                 meal_type: meal.meal_type,
@@ -695,7 +698,9 @@ async function swapMeal(dayNumber, mealKey) {
 // Check authentication status
 async function checkAuthStatus() {
     try {
-        const response = await fetch('/api/auth/user');
+        const response = await fetch('/api/auth/user', {
+            credentials: 'include'  // Include cookies for session auth
+        });
         if (response.status === 401) {
             // Not logged in - show login prompt
             const aiToggle = document.querySelector('.ai-assistant-toggle');
