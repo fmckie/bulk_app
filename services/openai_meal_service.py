@@ -12,6 +12,7 @@ from openai import OpenAI
 
 from services.usda_fooddata_service import USDAFoodDataService
 from services.redis_cache import default_cache
+from database.recipe_storage_db import RecipeStorageDB
 
 logger = logging.getLogger(__name__)
 
@@ -185,6 +186,10 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
             if 'user_id' in user_data:
                 self._save_recipes_to_cache(user_data['user_id'], meal_plan_data)
             
+            # Auto-save recipes to database
+            if user_data.get('auto_save_recipes', True) and 'user_id' in user_data:
+                self._save_recipes_to_database(user_data['user_id'], meal_plan_data, is_single_day=True)
+            
             return meal_plan_data
             
         except Exception as e:
@@ -298,6 +303,16 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
             
             # Validate and enhance the meal plan
             meal_plan = self._validate_and_enhance_meal_plan(meal_plan_data, user_data)
+            
+            # Auto-save all recipes to database
+            if user_data.get('auto_save_recipes', True) and 'user_id' in user_data:
+                generation_start = datetime.now()
+                saved_recipe_ids = self._save_recipes_to_database(user_data['user_id'], meal_plan)
+                generation_time_ms = int((datetime.now() - generation_start).total_seconds() * 1000)
+                
+                # Save generation history
+                if saved_recipe_ids:
+                    self._save_generation_history(user_data['user_id'], meal_plan, saved_recipe_ids, generation_time_ms)
             
             return meal_plan
             
@@ -1192,3 +1207,177 @@ Provide optimization suggestions in JSON format:
             "total_estimated_cost": 120.00,
             "demo_mode": True
         }
+    
+    def _save_recipes_to_database(self, user_id: str, meal_plan: Dict, is_single_day: bool = False) -> List[str]:
+        """
+        Save all recipes from a meal plan to the database
+        
+        Args:
+            user_id: User ID
+            meal_plan: Complete meal plan data
+            is_single_day: Whether this is a single day plan
+            
+        Returns:
+            List of saved recipe IDs
+        """
+        try:
+            # Import here to avoid circular imports
+            from database.connection import supabase
+            
+            if not supabase:
+                logger.warning("Supabase client not available, skipping recipe save")
+                return []
+            
+            saved_recipe_ids = []
+            
+            # Handle single day plan
+            if is_single_day and 'meals' in meal_plan:
+                for meal_key, meal_data in meal_plan['meals'].items():
+                    recipe_id = self._save_single_recipe(supabase, meal_data, user_id)
+                    if recipe_id:
+                        saved_recipe_ids.append(recipe_id)
+            
+            # Handle 7-day plan
+            elif 'meal_plan' in meal_plan:
+                for day_key, day_data in meal_plan['meal_plan'].items():
+                    if day_key.startswith('day_') and 'meals' in day_data:
+                        for meal_key, meal_data in day_data['meals'].items():
+                            recipe_id = self._save_single_recipe(supabase, meal_data, user_id)
+                            if recipe_id:
+                                saved_recipe_ids.append(recipe_id)
+            
+            logger.info(f"Saved {len(saved_recipe_ids)} recipes to database for user {user_id}")
+            return saved_recipe_ids
+            
+        except Exception as e:
+            logger.error(f"Error saving recipes to database: {str(e)}")
+            return []
+    
+    def _save_single_recipe(self, supabase_client, meal_data: Dict[str, Any], user_id: str) -> Optional[str]:
+        """
+        Save a single recipe and its ingredients
+        
+        Args:
+            supabase_client: Supabase client instance
+            meal_data: Recipe/meal data
+            user_id: User ID
+            
+        Returns:
+            Recipe ID if successful
+        """
+        try:
+            # Extract cuisine type from recipe name or description
+            cuisine_type = self._extract_cuisine_type(meal_data.get('name', ''))
+            
+            # Prepare recipe data
+            recipe_data = {
+                'name': meal_data.get('name'),
+                'description': meal_data.get('description'),
+                'meal_type': meal_data.get('meal_type', 'meal'),
+                'cuisine_type': cuisine_type,
+                'prep_time': meal_data.get('prep_time'),
+                'cook_time': meal_data.get('cook_time'),
+                'servings': meal_data.get('servings', 1),
+                'difficulty': meal_data.get('difficulty', 'medium'),
+                'calories': meal_data.get('calories'),
+                'protein_g': meal_data.get('protein_g'),
+                'carbs_g': meal_data.get('carbs_g'),
+                'fats_g': meal_data.get('fats_g'),
+                'fiber_g': meal_data.get('fiber_g'),
+                'instructions': meal_data.get('instructions', []),
+                'tips': meal_data.get('meal_prep_tips'),
+                'tags': self._generate_recipe_tags(meal_data)
+            }
+            
+            # Save recipe
+            recipe_id = RecipeStorageDB.save_ai_recipe(supabase_client, recipe_data, user_id)
+            
+            if recipe_id and 'ingredients' in meal_data:
+                # Save ingredients
+                RecipeStorageDB.save_recipe_ingredients(supabase_client, recipe_id, meal_data['ingredients'])
+            
+            return recipe_id
+            
+        except Exception as e:
+            logger.error(f"Error saving single recipe: {str(e)}")
+            return None
+    
+    def _save_generation_history(self, user_id: str, meal_plan: Dict, recipe_ids: List[str], generation_time_ms: int):
+        """
+        Save meal generation history
+        
+        Args:
+            user_id: User ID
+            meal_plan: Complete meal plan data
+            recipe_ids: List of saved recipe IDs
+            generation_time_ms: Time taken to generate
+        """
+        try:
+            from database.connection import supabase
+            
+            if not supabase:
+                return
+            
+            RecipeStorageDB.save_generation_history(
+                supabase, 
+                user_id, 
+                meal_plan, 
+                recipe_ids, 
+                generation_time_ms
+            )
+            
+        except Exception as e:
+            logger.error(f"Error saving generation history: {str(e)}")
+    
+    def _extract_cuisine_type(self, recipe_name: str) -> str:
+        """Extract cuisine type from recipe name"""
+        cuisine_keywords = {
+            'mediterranean': ['mediterranean', 'greek', 'italian'],
+            'asian': ['asian', 'thai', 'chinese', 'japanese', 'korean', 'vietnamese'],
+            'mexican': ['mexican', 'tex-mex', 'chipotle', 'taco', 'burrito'],
+            'american': ['american', 'bbq', 'burger', 'southern'],
+            'indian': ['indian', 'curry', 'tandoori', 'masala'],
+            'middle_eastern': ['middle eastern', 'lebanese', 'turkish', 'moroccan']
+        }
+        
+        recipe_lower = recipe_name.lower()
+        for cuisine, keywords in cuisine_keywords.items():
+            for keyword in keywords:
+                if keyword in recipe_lower:
+                    return cuisine
+        
+        return 'international'
+    
+    def _generate_recipe_tags(self, meal_data: Dict[str, Any]) -> List[str]:
+        """Generate tags for a recipe based on its characteristics"""
+        tags = []
+        
+        # Dietary tags
+        name_lower = meal_data.get('name', '').lower()
+        if 'vegetarian' in name_lower or 'veggie' in name_lower:
+            tags.append('vegetarian')
+        if 'vegan' in name_lower:
+            tags.append('vegan')
+        
+        # Nutrition tags
+        if meal_data.get('protein_g', 0) > 30:
+            tags.append('high-protein')
+        if meal_data.get('carbs_g', 0) < 20:
+            tags.append('low-carb')
+        if meal_data.get('calories', 0) < 400:
+            tags.append('low-calorie')
+        
+        # Meal type
+        meal_type = meal_data.get('meal_type', '')
+        if meal_type:
+            tags.append(meal_type)
+        
+        # Prep time
+        total_time = (meal_data.get('prep_time', 0) or 0) + (meal_data.get('cook_time', 0) or 0)
+        if total_time > 0 and total_time <= 30:
+            tags.append('quick')
+        
+        # Meal prep friendly
+        tags.append('meal-prep')
+        
+        return tags

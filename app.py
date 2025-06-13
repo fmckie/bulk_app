@@ -903,12 +903,14 @@ def test_generate_meal_plan():
     # Generate meal plan
     ai_service = OpenAIMealService()
     user_data = {
+        'user_id': 'test-user',  # Add user_id for recipe saving
         'body_weight': profile['body_weight'],
         'age': profile['age'],
         'gender': profile['gender'],
         'dietary_requirements': data.get('dietary_requirements', []),
         'budget': data.get('budget', 150),
-        'training_days': ['Monday', 'Wednesday', 'Friday']
+        'training_days': ['Monday', 'Wednesday', 'Friday'],
+        'auto_save_recipes': True  # Enable auto-save
     }
     
     # Check if AI is requested and available
@@ -948,7 +950,8 @@ def generate_meal_plan():
             'gender': profile['gender'],
             'dietary_requirements': data.get('dietary_requirements', []),
             'budget': data.get('budget', 150),
-            'training_days': ['Monday', 'Wednesday', 'Friday']
+            'training_days': ['Monday', 'Wednesday', 'Friday'],
+            'auto_save_recipes': True  # Enable auto-save
         }
         
         meal_plan = ai_service.generate_meal_plan(user_data)
@@ -986,7 +989,8 @@ def generate_meal_plan():
                     'dietary_requirements': data.get('dietary_requirements', []),
                     'budget': data.get('budget', 150),
                     'training_days': ['Monday', 'Wednesday', 'Friday'],  # Get from workout schedule
-                    'preferences': preferences
+                    'preferences': preferences,
+                    'auto_save_recipes': True  # Enable auto-save
                 }
                 
                 # Generate meal plan with AI
@@ -1197,6 +1201,198 @@ def meal_prep_chat():
     except Exception as e:
         logger.error(f"Error in meal prep chat: {str(e)}")
         return jsonify({'error': str(e)}), 500
+
+@app.route('/api/recipes/search', methods=['GET'])
+def search_recipes():
+    """Search saved AI-generated recipes"""
+    if DEMO_MODE:
+        # Return demo recipes
+        return jsonify({
+            'recipes': [
+                {
+                    'id': 'demo-recipe-1',
+                    'name': 'Mediterranean Herb-Crusted Chicken with Quinoa',
+                    'meal_type': 'lunch',
+                    'cuisine_type': 'mediterranean',
+                    'calories': 650,
+                    'protein_g': 45,
+                    'carbs_g': 52,
+                    'fats_g': 18,
+                    'tags': ['high-protein', 'meal-prep', 'mediterranean'],
+                    'average_rating': 4.5,
+                    'created_at': datetime.now().isoformat()
+                }
+            ],
+            'total': 1
+        })
+    else:
+        from auth import login_required, get_current_user_id
+        from database.connection import supabase
+        from database.recipe_storage_db import RecipeStorageDB
+        
+        @login_required
+        def _search_recipes():
+            try:
+                user_id = get_current_user_id()
+                
+                # Get search parameters
+                search_params = {
+                    'name': request.args.get('name'),
+                    'meal_type': request.args.get('meal_type'),
+                    'cuisine_type': request.args.get('cuisine_type'),
+                    'max_calories': request.args.get('max_calories', type=int),
+                    'min_protein': request.args.get('min_protein', type=int),
+                    'tags': request.args.getlist('tags'),
+                    'limit': request.args.get('limit', 20, type=int)
+                }
+                
+                # Remove None values
+                search_params = {k: v for k, v in search_params.items() if v}
+                
+                # Search recipes
+                recipes = RecipeStorageDB.search_recipes(supabase, user_id, search_params)
+                
+                return jsonify({
+                    'recipes': recipes,
+                    'total': len(recipes)
+                })
+                
+            except Exception as e:
+                logger.error(f"Error searching recipes: {str(e)}")
+                return jsonify({'error': 'Failed to search recipes'}), 500
+        
+        return _search_recipes()
+
+@app.route('/api/recipes/<recipe_id>', methods=['GET'])
+def get_recipe_details():
+    """Get detailed recipe information including ingredients"""
+    if DEMO_MODE:
+        return jsonify({
+            'id': 'demo-recipe-1',
+            'name': 'Mediterranean Herb-Crusted Chicken with Quinoa',
+            'description': 'A healthy, high-protein meal perfect for meal prep',
+            'meal_type': 'lunch',
+            'cuisine_type': 'mediterranean',
+            'prep_time': 15,
+            'cook_time': 25,
+            'servings': 1,
+            'difficulty': 'medium',
+            'calories': 650,
+            'protein_g': 45,
+            'carbs_g': 52,
+            'fats_g': 18,
+            'fiber_g': 8,
+            'ingredients': [
+                {'name': 'Chicken breast', 'quantity': 6, 'unit': 'oz'},
+                {'name': 'Quinoa', 'quantity': 1, 'unit': 'cup cooked'},
+                {'name': 'Broccoli', 'quantity': 1, 'unit': 'cup'},
+                {'name': 'Olive oil', 'quantity': 1, 'unit': 'tbsp'}
+            ],
+            'instructions': [
+                'Marinate chicken in herbs and spices',
+                'Cook quinoa according to package directions',
+                'Grill chicken until internal temp reaches 165°F',
+                'Steam broccoli until tender',
+                'Serve together with a drizzle of olive oil'
+            ],
+            'tags': ['high-protein', 'meal-prep', 'mediterranean'],
+            'average_rating': 4.5,
+            'created_at': datetime.now().isoformat()
+        })
+    else:
+        from auth import login_required, get_current_user_id
+        from database.connection import supabase
+        from database.recipe_storage_db import RecipeStorageDB
+        
+        @login_required
+        def _get_recipe_details(recipe_id):
+            try:
+                recipe = RecipeStorageDB.get_recipe_by_id(supabase, recipe_id)
+                
+                if not recipe:
+                    return jsonify({'error': 'Recipe not found'}), 404
+                
+                return jsonify(recipe)
+                
+            except Exception as e:
+                logger.error(f"Error getting recipe details: {str(e)}")
+                return jsonify({'error': 'Failed to get recipe details'}), 500
+        
+        return _get_recipe_details(recipe_id)
+
+@app.route('/api/recipes/<recipe_id>/favorite', methods=['POST'])
+def add_recipe_to_favorites():
+    """Add a recipe to user's favorites"""
+    if DEMO_MODE:
+        return jsonify({'success': True, 'message': 'Recipe added to favorites'})
+    else:
+        from auth import login_required, get_current_user_id
+        from database.connection import supabase
+        from database.recipe_storage_db import RecipeStorageDB
+        
+        @login_required
+        def _add_to_favorites(recipe_id):
+            try:
+                user_id = get_current_user_id()
+                data = request.json
+                
+                success = RecipeStorageDB.add_recipe_to_collection(
+                    supabase,
+                    user_id,
+                    recipe_id,
+                    'favorites',
+                    data.get('notes')
+                )
+                
+                if success:
+                    return jsonify({'success': True, 'message': 'Recipe added to favorites'})
+                else:
+                    return jsonify({'error': 'Failed to add to favorites'}), 400
+                    
+            except Exception as e:
+                logger.error(f"Error adding to favorites: {str(e)}")
+                return jsonify({'error': 'Failed to add to favorites'}), 500
+        
+        return _add_to_favorites(recipe_id)
+
+@app.route('/api/recipes/generation-history', methods=['GET'])
+def get_generation_history():
+    """Get user's meal generation history"""
+    if DEMO_MODE:
+        return jsonify({
+            'history': [{
+                'id': 'demo-history-1',
+                'generation_date': datetime.now().isoformat(),
+                'generation_type': '7_day',
+                'total_recipes': 21,
+                'dietary_requirements': ['vegetarian'],
+                'budget': 150.00
+            }],
+            'total': 1
+        })
+    else:
+        from auth import login_required, get_current_user_id
+        from database.connection import supabase
+        from database.recipe_storage_db import RecipeStorageDB
+        
+        @login_required
+        def _get_generation_history():
+            try:
+                user_id = get_current_user_id()
+                limit = request.args.get('limit', 10, type=int)
+                
+                history = RecipeStorageDB.get_user_generation_history(supabase, user_id, limit)
+                
+                return jsonify({
+                    'history': history,
+                    'total': len(history)
+                })
+                
+            except Exception as e:
+                logger.error(f"Error getting generation history: {str(e)}")
+                return jsonify({'error': 'Failed to get generation history'}), 500
+        
+        return _get_generation_history()
 
 # Error handlers
 @app.errorhandler(404)
