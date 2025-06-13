@@ -14,18 +14,28 @@ load_dotenv()
 # Configure logging
 logger = logging.getLogger(__name__)
 
-# Initialize Supabase client
+# Initialize Supabase clients
 try:
     url = os.getenv('SUPABASE_URL', '')
-    key = os.getenv('SUPABASE_KEY', '')
+    anon_key = os.getenv('SUPABASE_KEY', '')
+    service_key = os.getenv('SUPABASE_SERVICE_KEY', '')
     
-    if url and key:
-        # Create client with basic parameters for older version
-        supabase: Client = create_client(url, key)
+    if url and anon_key:
+        # Create client with anon key for general use
+        supabase: Client = create_client(url, anon_key)
         logger.info("Supabase client initialized successfully")
+        
+        # Create service client if service key is available
+        if service_key:
+            supabase_admin: Client = create_client(url, service_key)
+            logger.info("Supabase admin client initialized successfully")
+        else:
+            supabase_admin = None
+            logger.warning("No service key provided - some operations may fail")
     else:
         logger.error("Missing Supabase URL or KEY")
         supabase = None
+        supabase_admin = None
 except Exception as e:
     logger.error(f"Failed to initialize Supabase client: {str(e)}")
     logger.error(f"Error type: {type(e).__name__}")
@@ -252,6 +262,199 @@ class ProfileDB:
             .execute()
         
         return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def check_username_available(username):
+        """Check if a username is available"""
+        result = supabase.rpc('check_username_available', {
+            'username_input': username
+        }).execute()
+        
+        return result.data if result.data is not None else False
+    
+    @staticmethod
+    @handle_db_errors
+    def is_username_allowed(username):
+        """Check if a username is allowed (valid format and not reserved)"""
+        result = supabase.rpc('is_username_allowed', {
+            'username_input': username
+        }).execute()
+        
+        return result.data if result.data is not None else False
+    
+    @staticmethod
+    @handle_db_errors
+    def update_onboarding_status(user_id, completed=True):
+        """Update user's onboarding completion status"""
+        from datetime import datetime
+        
+        data = {
+            'onboarding_completed': completed,
+            'onboarding_completed_at': datetime.now().isoformat() if completed else None
+        }
+        
+        result = supabase.table('profiles')\
+            .update(data)\
+            .eq('id', user_id)\
+            .execute()
+        
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def start_onboarding(user_id):
+        """Mark the start of onboarding process"""
+        from datetime import datetime
+        
+        data = {
+            'onboarding_started_at': datetime.now().isoformat()
+        }
+        
+        result = supabase.table('profiles')\
+            .update(data)\
+            .eq('id', user_id)\
+            .execute()
+        
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def update_profile_with_validation(user_id, data):
+        """Update profile with validation for required onboarding fields"""
+        # Validate required fields for onboarding
+        required_fields = ['username', 'body_weight', 'primary_goal']
+        for field in required_fields:
+            if field in data and not data[field]:
+                return None, f"{field} is required"
+        
+        # Validate username if provided
+        if 'username' in data:
+            if not ProfileDB.is_username_allowed(data['username']):
+                return None, "Username is invalid or already taken"
+        
+        # Validate weight if provided
+        if 'body_weight' in data:
+            weight = float(data['body_weight'])
+            if weight < 50 or weight > 500:
+                return None, "Weight must be between 50 and 500 lbs"
+        
+        # Update profile
+        result = ProfileDB.create_or_update_profile(user_id, data)
+        return result, None
+
+
+class OnboardingDB:
+    """Database operations for onboarding sessions"""
+    
+    @staticmethod
+    @handle_db_errors
+    def create_session(email, user_id=None):
+        """Create a new onboarding session"""
+        from datetime import datetime, timedelta
+        
+        data = {
+            'email': email,
+            'user_id': user_id,
+            'current_step': 1,
+            'data': {},
+            'expires_at': (datetime.now() + timedelta(hours=24)).isoformat()
+        }
+        
+        # Use admin client if available for bypassing RLS
+        client = supabase_admin if supabase_admin else supabase
+        result = client.table('onboarding_sessions').insert(data).execute()
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def get_session(session_id):
+        """Get an onboarding session by ID"""
+        result = supabase.table('onboarding_sessions')\
+            .select('*')\
+            .eq('id', session_id)\
+            .execute()
+        
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def get_session_by_email(email):
+        """Get the most recent active onboarding session for an email"""
+        from datetime import datetime
+        
+        result = supabase.table('onboarding_sessions')\
+            .select('*')\
+            .eq('email', email)\
+            .eq('completed', False)\
+            .gt('expires_at', datetime.now().isoformat())\
+            .order('created_at', desc=True)\
+            .limit(1)\
+            .execute()
+        
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def update_session(session_id, step=None, data=None):
+        """Update onboarding session progress"""
+        from datetime import datetime
+        
+        update_data = {'updated_at': datetime.now().isoformat()}
+        
+        if step is not None:
+            update_data['current_step'] = step
+        
+        if data is not None:
+            # Merge new data with existing data
+            session = OnboardingDB.get_session(session_id)
+            if session:
+                existing_data = session.get('data', {})
+                existing_data.update(data)
+                update_data['data'] = existing_data
+        
+        result = supabase.table('onboarding_sessions')\
+            .update(update_data)\
+            .eq('id', session_id)\
+            .execute()
+        
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def complete_session(session_id):
+        """Mark an onboarding session as completed"""
+        from datetime import datetime
+        
+        data = {
+            'completed': True,
+            'updated_at': datetime.now().isoformat()
+        }
+        
+        result = supabase.table('onboarding_sessions')\
+            .update(data)\
+            .eq('id', session_id)\
+            .execute()
+        
+        return result.data[0] if result.data else None
+    
+    @staticmethod
+    @handle_db_errors
+    def cleanup_expired_sessions():
+        """Clean up expired onboarding sessions"""
+        result = supabase.rpc('cleanup_expired_onboarding_sessions').execute()
+        return result.data if result.data is not None else 0
+    
+    @staticmethod
+    @handle_db_errors
+    def get_fitness_goals():
+        """Get all available fitness goals"""
+        result = supabase.table('fitness_goals')\
+            .select('*')\
+            .order('display_order')\
+            .execute()
+        
+        return result.data
 
 
 class NutritionDB:

@@ -1,0 +1,111 @@
+{% extends "base.html" %}
+
+{% block title %}Complete Your Profile - Kinobody Tracker{% endblock %}
+
+{% block extra_css %}
+<link rel="stylesheet" href="/static/css/onboarding.css">
+{% endblock %}
+
+{% block content %}
+<div class="onboarding-container">
+    <!-- Progress Bar -->
+    <div class="progress-container">
+        <div class="progress-bar">
+            <div class="progress-fill" style="width: 33%;"></div>
+        </div>
+        <div class="progress-steps">
+            <div class="step active">
+                <div class="step-number">1</div>
+                <div class="step-label">Profile</div>
+            </div>
+            <div class="step">
+                <div class="step-number">2</div>
+                <div class="step-label">Goals</div>
+            </div>
+            <div class="step">
+                <div class="step-number">3</div>
+                <div class="step-label">Complete</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <div class="onboarding-content">
+        <div class="onboarding-header">
+            <h1>Welcome to Your Fitness Journey!</h1>
+            <p>Let's set up your profile to personalize your experience</p>
+        </div>
+
+        <form id="profile-form" class="onboarding-form">
+            <!-- Username -->
+            <div class="form-group">
+                <label for="username">Choose Your Username</label>
+                <input type="text" id="username" name="username" class="form-control" 
+                       placeholder="e.g., fitnesshero123" required>
+                <div class="form-feedback" id="username-feedback"></div>
+                <small class="form-text">3-20 characters, letters, numbers, and underscores only</small>
+            </div>
+
+            <!-- Full Name -->
+            <div class="form-group">
+                <label for="full_name">Full Name (Optional)</label>
+                <input type="text" id="full_name" name="full_name" class="form-control" 
+                       placeholder="John Doe">
+            </div>
+
+            <!-- Body Weight -->
+            <div class="form-group">
+                <label for="body_weight">Current Body Weight</label>
+                <div class="input-with-toggle">
+                    <input type="number" id="body_weight" name="body_weight" class="form-control" 
+                           placeholder="Enter weight" required min="50" max="500" step="0.1">
+                    <div class="unit-toggle">
+                        <button type="button" class="unit-btn active" data-unit="lbs">lbs</button>
+                        <button type="button" class="unit-btn" data-unit="kg">kg</button>
+                    </div>
+                </div>
+                <input type="hidden" id="weight_unit" name="weight_unit" value="lbs">
+            </div>
+
+            <!-- Height -->
+            <div class="form-group">
+                <label for="height">Height (Optional)</label>
+                <div class="height-input">
+                    <input type="number" id="height_feet" name="height_feet" class="form-control" 
+                           placeholder="Feet" min="3" max="8">
+                    <span class="height-separator">ft</span>
+                    <input type="number" id="height_inches" name="height_inches" class="form-control" 
+                           placeholder="Inches" min="0" max="11">
+                    <span class="height-separator">in</span>
+                </div>
+                <input type="hidden" id="height" name="height">
+                <small class="form-text">Used to calculate BMI and personalize recommendations</small>
+            </div>
+
+            <!-- Form Actions -->
+            <div class="form-actions">
+                <button type="button" class="btn btn-secondary" onclick="skipOnboarding()">Skip for Now</button>
+                <button type="submit" class="btn btn-primary">Continue</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<!-- Loading Modal -->
+<div id="loading-modal" class="modal">
+    <div class="modal-content">
+        <div class="spinner"></div>
+        <p>Setting up your profile...</p>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="/static/js/onboarding.js"></script>
+<script>
+    // Initialize step 1
+    document.addEventListener('DOMContentLoaded', function() {
+        initializeStep1();
+    });
+</script>
+{% endblock %}

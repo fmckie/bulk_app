@@ -5,6 +5,7 @@ python-dotenv==1.0.0
 
 # Database and storage
 supabase==2.4.0
+gotrue==2.8.1  # Pinned to 2.8.1 to fix proxy parameter bug in 2.9.1
 redis==5.0.1
 
 # Additional utilities

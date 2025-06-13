@@ -171,12 +171,12 @@ async function handleRegister(e) {
     e.preventDefault();
     clearErrors();
     
+    // Ensure demo mode check is complete
+    await checkDemoMode();
+    
     const email = document.getElementById('email').value.trim();
     const password = document.getElementById('password').value;
     const confirmPassword = document.getElementById('confirmPassword').value;
-    const username = document.getElementById('username').value.trim();
-    const fullName = document.getElementById('fullName').value.trim();
-    const bodyWeight = document.getElementById('bodyWeight').value;
     const terms = document.getElementById('terms').checked;
     
     // Validate
@@ -200,11 +200,6 @@ async function handleRegister(e) {
         hasError = true;
     }
     
-    if (username && username.length < 3) {
-        showError('usernameError', 'Username must be at least 3 characters');
-        hasError = true;
-    }
-    
     if (!terms) {
         showError('termsError', 'You must agree to the terms');
         hasError = true;
@@ -215,6 +210,9 @@ async function handleRegister(e) {
     setButtonLoading('registerButton', true);
     
     try {
+        console.log('Attempting signup with API_BASE:', API_BASE);
+        console.log('Signup URL:', `${API_BASE}/signup`);
+        
         const response = await fetch(`${API_BASE}/signup`, {
             method: 'POST',
             headers: {
@@ -222,22 +220,34 @@ async function handleRegister(e) {
             },
             body: JSON.stringify({
                 email,
-                password,
-                username,
-                full_name: fullName,
-                body_weight: bodyWeight ? parseFloat(bodyWeight) : null
+                password
             })
         });
         
         const data = await response.json();
         
         if (response.ok && data.success) {
-            showAlert('Account created successfully! Redirecting to login...', 'success');
-            
-            // Redirect to login after 2 seconds
-            setTimeout(() => {
-                window.location.href = '/login?registered=true';
-            }, 2000);
+            // Check if onboarding is required
+            if (data.onboarding && data.onboarding.required) {
+                // Store onboarding session ID
+                if (data.onboarding.session_id) {
+                    localStorage.setItem('onboarding_session_id', data.onboarding.session_id);
+                }
+                
+                showAlert('Account created successfully! Let\'s set up your profile...', 'success');
+                
+                // Redirect to onboarding after 1.5 seconds
+                setTimeout(() => {
+                    window.location.href = '/onboarding/profile';
+                }, 1500);
+            } else {
+                showAlert('Account created successfully! Redirecting to login...', 'success');
+                
+                // Redirect to login after 2 seconds
+                setTimeout(() => {
+                    window.location.href = '/login?registered=true';
+                }, 2000);
+            }
         } else {
             showAlert(data.error || 'Registration failed. Please try again.', 'error');
         }

@@ -76,6 +76,34 @@ def get_current_user_id():
     return None
 
 
+def require_onboarding_complete(f):
+    """Decorator to ensure user has completed onboarding"""
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        # First check if user is logged in
+        user_id = get_current_user_id()
+        if not user_id:
+            return jsonify({'error': 'Authentication required'}), 401
+        
+        # Check onboarding status
+        from database.connection import ProfileDB
+        profile = ProfileDB.get_profile(user_id)
+        
+        if not profile or not profile.get('onboarding_completed'):
+            # Allow access to onboarding endpoints
+            if request.path.startswith('/api/onboarding') or request.path.startswith('/onboarding'):
+                return f(*args, **kwargs)
+            
+            return jsonify({
+                'error': 'Please complete your profile setup',
+                'onboarding_required': True,
+                'redirect': '/onboarding/profile'
+            }), 403
+        
+        return f(*args, **kwargs)
+    return decorated_function
+
+
 class AuthService:
     """Authentication service for Supabase"""
     

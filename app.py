@@ -179,6 +179,30 @@ def register():
         return redirect(url_for('index'))
     return render_template('register.html')
 
+@app.route('/onboarding/profile')
+def onboarding_profile():
+    """Onboarding step 1: Profile setup"""
+    # Check if user is logged in
+    if 'access_token' not in session:
+        return redirect(url_for('login'))
+    return render_template('onboarding-step1.html')
+
+@app.route('/onboarding/goals')
+def onboarding_goals():
+    """Onboarding step 2: Fitness goals"""
+    # Check if user is logged in
+    if 'access_token' not in session:
+        return redirect(url_for('login'))
+    return render_template('onboarding-step2.html')
+
+@app.route('/onboarding/complete')
+def onboarding_complete():
+    """Onboarding completion page"""
+    # Check if user is logged in
+    if 'access_token' not in session:
+        return redirect(url_for('login'))
+    return render_template('onboarding-complete.html')
+
 @app.route('/password-reset')
 def password_reset():
     """Password reset page"""
@@ -565,14 +589,9 @@ def signup():
         if not email or not password:
             return jsonify({'error': 'Email and password required'}), 400
         
-        # Profile data
-        profile_data = {
-            'username': data.get('username'),
-            'full_name': data.get('full_name'),
-            'body_weight': data.get('body_weight')
-        }
-        
-        result = AuthService.sign_up(email, password, profile_data)
+        # Initial signup only needs email/password
+        # Profile data will be collected during onboarding
+        result = AuthService.sign_up(email, password, {})
         
         if result['success']:
             # Store session
@@ -580,12 +599,24 @@ def signup():
                 session['access_token'] = result['session'].access_token
                 session['refresh_token'] = result['session'].refresh_token
             
+            # Create onboarding session
+            from database.connection import OnboardingDB
+            onboarding_session = OnboardingDB.create_session(
+                email=result['user'].email,
+                user_id=result['user'].id
+            )
+            
             return jsonify({
                 'success': True,
                 'message': 'Account created successfully',
                 'user': {
                     'id': result['user'].id,
                     'email': result['user'].email
+                },
+                'onboarding': {
+                    'required': True,
+                    'session_id': onboarding_session['id'] if onboarding_session else None,
+                    'current_step': 1
                 }
             })
         else:
@@ -1004,6 +1035,206 @@ def delete_account():
             return jsonify({'error': str(e)}), 500
     
     return _delete_account_impl()
+
+# Onboarding API Routes
+@app.route('/api/onboarding/start', methods=['POST'])
+def start_onboarding():
+    """Start onboarding process after signup"""
+    if DEMO_MODE:
+        return jsonify({'error': 'Onboarding requires Supabase configuration.'}), 503
+    
+    from database.connection import OnboardingDB
+    
+    try:
+        data = request.json
+        email = data.get('email')
+        user_id = data.get('user_id')
+        
+        if not email:
+            return jsonify({'error': 'Email required'}), 400
+        
+        # Check for existing session
+        existing_session = OnboardingDB.get_session_by_email(email)
+        if existing_session:
+            return jsonify(existing_session)
+        
+        # Create new onboarding session
+        session = OnboardingDB.create_session(email, user_id)
+        
+        if not session:
+            return jsonify({'error': 'Failed to create onboarding session'}), 500
+        
+        return jsonify(session)
+    except Exception as e:
+        logger.error(f"Start onboarding error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/onboarding/check-username', methods=['POST'])
+def check_username():
+    """Check if username is available"""
+    if DEMO_MODE:
+        return jsonify({'available': True, 'valid': True})
+    
+    from database.connection import ProfileDB
+    
+    try:
+        data = request.json
+        username = data.get('username', '')
+        
+        # Check if username is valid and available
+        is_allowed = ProfileDB.is_username_allowed(username)
+        is_available = ProfileDB.check_username_available(username) if is_allowed else False
+        
+        return jsonify({
+            'available': is_available,
+            'valid': is_allowed,
+            'message': 'Username is available' if is_available else 'Username is not available or invalid'
+        })
+    except Exception as e:
+        logger.error(f"Username check error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/onboarding/profile', methods=['POST'])
+def update_onboarding_profile():
+    """Update profile during onboarding"""
+    if DEMO_MODE:
+        return jsonify({'success': True})
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB, OnboardingDB
+    
+    @login_required
+    def _update_onboarding_profile_impl():
+        try:
+            user_id = get_current_user_id()
+            data = request.json
+            session_id = data.get('session_id')
+            
+            # Extract profile data
+            profile_data = {
+                'username': data.get('username'),
+                'full_name': data.get('full_name'),
+                'body_weight': data.get('body_weight'),
+                'weight_unit': data.get('weight_unit', 'lbs'),
+                'height': data.get('height')
+            }
+            
+            # Validate and update profile
+            result, error = ProfileDB.update_profile_with_validation(user_id, profile_data)
+            
+            if error:
+                return jsonify({'error': error}), 400
+            
+            # Update onboarding session
+            if session_id:
+                OnboardingDB.update_session(session_id, step=2, data={'profile_completed': True})
+            
+            # Mark onboarding started
+            ProfileDB.start_onboarding(user_id)
+            
+            return jsonify({'success': True, 'profile': result})
+        except Exception as e:
+            logger.error(f"Onboarding profile update error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _update_onboarding_profile_impl()
+
+@app.route('/api/onboarding/goals', methods=['POST'])
+def update_onboarding_goals():
+    """Update fitness goals during onboarding"""
+    if DEMO_MODE:
+        return jsonify({'success': True})
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB, OnboardingDB
+    
+    @login_required
+    def _update_onboarding_goals_impl():
+        try:
+            user_id = get_current_user_id()
+            data = request.json
+            session_id = data.get('session_id')
+            
+            # Extract goals data
+            goals_data = {
+                'primary_goal': data.get('primary_goal'),
+                'target_weight': data.get('target_weight'),
+                'target_body_fat': data.get('target_body_fat'),
+                'activity_level': data.get('activity_level', 'moderately_active'),
+                'program_start_date': datetime.now().date().isoformat()
+            }
+            
+            # Update profile with goals
+            result = ProfileDB.create_or_update_profile(user_id, goals_data)
+            
+            if not result:
+                return jsonify({'error': 'Failed to update goals'}), 500
+            
+            # Complete onboarding
+            ProfileDB.update_onboarding_status(user_id, completed=True)
+            
+            # Complete onboarding session
+            if session_id:
+                OnboardingDB.update_session(session_id, step=3, data={'goals_completed': True})
+                OnboardingDB.complete_session(session_id)
+            
+            return jsonify({'success': True, 'profile': result})
+        except Exception as e:
+            logger.error(f"Onboarding goals update error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _update_onboarding_goals_impl()
+
+@app.route('/api/onboarding/goals-list', methods=['GET'])
+def get_fitness_goals():
+    """Get available fitness goals"""
+    if DEMO_MODE:
+        return jsonify({
+            'goals': [
+                {'id': 'muscle_building', 'name': 'Build Muscle', 'description': 'Focus on gaining lean muscle mass', 'icon': '💪'},
+                {'id': 'weight_loss', 'name': 'Lose Weight', 'description': 'Focus on fat loss', 'icon': '🔥'},
+                {'id': 'body_recomposition', 'name': 'Body Recomposition', 'description': 'Build muscle and lose fat', 'icon': '⚡'}
+            ]
+        })
+    
+    from database.connection import OnboardingDB
+    
+    try:
+        goals = OnboardingDB.get_fitness_goals()
+        return jsonify({'goals': goals})
+    except Exception as e:
+        logger.error(f"Get fitness goals error: {str(e)}")
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/onboarding/skip', methods=['POST'])
+def skip_onboarding():
+    """Skip onboarding (for existing users or optional flow)"""
+    if DEMO_MODE:
+        return jsonify({'success': True})
+    
+    from auth import login_required, get_current_user_id
+    from database.connection import ProfileDB, OnboardingDB
+    
+    @login_required
+    def _skip_onboarding_impl():
+        try:
+            user_id = get_current_user_id()
+            data = request.json
+            session_id = data.get('session_id')
+            
+            # Mark onboarding as skipped (not completed)
+            ProfileDB.update_onboarding_status(user_id, completed=False)
+            
+            # Cancel onboarding session
+            if session_id:
+                OnboardingDB.complete_session(session_id)
+            
+            return jsonify({'success': True})
+        except Exception as e:
+            logger.error(f"Skip onboarding error: {str(e)}")
+            return jsonify({'error': str(e)}), 500
+    
+    return _skip_onboarding_impl()
 
 @app.route('/meal-prep')
 def meal_prep():
