@@ -71,6 +71,13 @@ class OpenAIMealService:
             carbs_calories = total_calories - protein_calories - fats_calories
             carbs_g = round(carbs_calories / 4)
             
+            # Get recent recipes to avoid repetition
+            recent_recipes = self._get_recent_recipes(user_data.get('user_id'))
+            
+            # Track this generation request
+            if 'user_id' in user_data:
+                self._track_generation_request(user_data['user_id'])
+            
             # Build optimized prompt for single day
             prompt = self._build_single_day_prompt(
                 body_weight=body_weight,
@@ -79,7 +86,8 @@ class OpenAIMealService:
                 carbs_g=carbs_g,
                 fats_g=fats_g,
                 day_type=day_type,
-                dietary_requirements=user_data.get('dietary_requirements', [])
+                dietary_requirements=user_data.get('dietary_requirements', []),
+                recent_recipes=recent_recipes
             )
             
             # Generate meal plan with AI
@@ -89,25 +97,47 @@ class OpenAIMealService:
                     {
                         "role": "system", 
                         "content": """You are an expert nutritionist specializing in the Kinobody Greek God program and meal prep planning.
-Your #1 priority is creating meal plans with EXACT nutritional accuracy using USDA FoodData Central values.
+Your TOP priorities are:
+1. Creating DIVERSE meal plans with MAXIMUM VARIETY - this is CRITICAL
+2. Achieving EXACT nutritional accuracy using USDA FoodData Central values
 
 Key principles:
-1. EXACT MACROS: Every meal plan must hit the exact calorie and macro targets provided (within 2% tolerance)
-2. REAL RECIPES: Use only real, practical recipes with common ingredients
-3. PRECISE MEASUREMENTS: Every ingredient must have exact measurements in grams or standard units
-4. INTERMITTENT FASTING: All meals must fit within 12pm-8pm eating window
-5. MEAL PREP FRIENDLY: Foods that store well for 3-5 days
+1. VARIETY FIRST: Every meal must be unique with different proteins, carbs, and cooking methods
+2. EXACT MACROS: Every meal plan must hit the exact calorie and macro targets provided (within 2% tolerance)
+3. REAL RECIPES: Use only real, practical recipes with common ingredients
+4. PRECISE MEASUREMENTS: Every ingredient must have exact measurements in grams or standard units
+5. INTERMITTENT FASTING: All meals must fit within 12pm-8pm eating window
+6. MEAL PREP FRIENDLY: Foods that store well for 3-5 days
+
+CRITICAL VARIETY REQUIREMENTS:
+- NEVER repeat the same protein source in one day
+- NEVER use generic recipe names like "Chicken & Rice" or "Beef & Sweet Potato"
+- Use specific, appetizing recipe names with cuisines/cooking methods
+- Rotate through different cuisines: Mediterranean, Asian, Mexican, Italian, American
+- Vary cooking methods: grilled, baked, stir-fried, slow-cooked, pan-seared
+- Generate COMPLETELY DIFFERENT recipes from any previous suggestions
+- Each meal must have a unique flavor profile and cooking style
+
+RECIPE NAMING EXAMPLES:
+- GOOD: "Mediterranean Herb-Crusted Salmon with Quinoa Tabbouleh"
+- GOOD: "Thai Basil Beef Stir-Fry with Jasmine Rice"
+- GOOD: "Mexican Chipotle Turkey Bowl with Cilantro Lime Rice"
+- BAD: "Chicken with Rice"
+- BAD: "Beef and Sweet Potato"
 
 CRITICAL - Use USDA-verified nutritional values:
 - ALL nutritional values will be validated against USDA FoodData Central
 - Use specific USDA food names (e.g., "Chicken, breast, meat only, cooked, grilled")
 - Include preparation method: "raw", "cooked", "grilled", "baked"
 - Be specific: "chicken breast, boneless, skinless, cooked" not just "chicken"
-- Your values MUST match USDA data within 10% or they will be corrected
 
 Common USDA-verified values per 100g:
 - Chicken breast, cooked: 165 cal, 31g protein, 0g carbs, 3.6g fat
+- Chicken thighs, cooked: 209 cal, 26g protein, 0g carbs, 10.9g fat
+- Ground beef 90% lean: 217 cal, 26g protein, 0g carbs, 12g fat
+- Salmon, cooked: 206 cal, 22g protein, 0g carbs, 13g fat
 - Rice, white, cooked: 130 cal, 2.7g protein, 28g carbs, 0.3g fat
+- Quinoa, cooked: 120 cal, 4.1g protein, 21g carbs, 1.9g fat
 - Sweet potato, baked: 90 cal, 2g protein, 21g carbs, 0.1g fat
 - Oil, olive: 884 cal, 0g protein, 0g carbs, 100g fat
 
@@ -115,7 +145,7 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3,  # Lower temperature for more consistent nutritional accuracy
+                temperature=0.5,  # Balanced temperature for variety while maintaining accuracy
                 max_tokens=2500
                 # Note: Removed response_format due to timeout issues
             )
@@ -151,6 +181,10 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
             if os.getenv('USDA_VALIDATION_ENABLED', 'true').lower() == 'true':
                 meal_plan_data = self.validate_with_usda(meal_plan_data)
             
+            # Save recipes to cache for variety tracking
+            if 'user_id' in user_data:
+                self._save_recipes_to_cache(user_data['user_id'], meal_plan_data)
+            
             return meal_plan_data
             
         except Exception as e:
@@ -176,8 +210,28 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
             maintenance_calories = body_weight * 15
             training_days = user_data.get('training_days', ['Monday', 'Wednesday', 'Friday'])
             
-            # Build the prompt
-            prompt = self._build_meal_plan_prompt(user_data, maintenance_calories, training_days)
+            # Get user preferences to enhance variety
+            preferences = user_data.get('preferences', {})
+            favorite_ingredients = preferences.get('favorite_ingredients', [])
+            avoided_ingredients = preferences.get('avoided_ingredients', [])
+            
+            # Get recent recipes to avoid repetition
+            recent_recipes = self._get_recent_recipes(user_data.get('user_id'))
+            
+            # Track this generation request
+            if 'user_id' in user_data:
+                self._track_generation_request(user_data['user_id'])
+            
+            # Build the prompt with preferences
+            prompt = self._build_meal_plan_prompt(user_data, maintenance_calories, training_days, recent_recipes)
+            
+            # Add preference information to prompt if available
+            if favorite_ingredients or avoided_ingredients:
+                prompt += f"\n\nUSER PREFERENCES:\n"
+                if favorite_ingredients:
+                    prompt += f"- Favorite ingredients to include: {', '.join(favorite_ingredients)}\n"
+                if avoided_ingredients:
+                    prompt += f"- Ingredients to avoid: {', '.join(avoided_ingredients)}\n"
             
             # Generate meal plan with AI
             response = self.client.chat.completions.create(
@@ -186,25 +240,47 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
                     {
                         "role": "system", 
                         "content": """You are an expert nutritionist specializing in the Kinobody Greek God program and meal prep planning.
-Your #1 priority is creating meal plans with EXACT nutritional accuracy using USDA FoodData Central values.
+Your TOP priorities are:
+1. Creating DIVERSE meal plans with MAXIMUM VARIETY - this is CRITICAL
+2. Achieving EXACT nutritional accuracy using USDA FoodData Central values
 
 Key principles:
-1. EXACT MACROS: Every meal plan must hit the exact calorie and macro targets provided (within 2% tolerance)
-2. REAL RECIPES: Use only real, practical recipes with common ingredients
-3. PRECISE MEASUREMENTS: Every ingredient must have exact measurements in grams or standard units
-4. INTERMITTENT FASTING: All meals must fit within 12pm-8pm eating window
-5. MEAL PREP FRIENDLY: Foods that store well for 3-5 days
+1. VARIETY FIRST: Every meal must be unique with different proteins, carbs, and cooking methods
+2. EXACT MACROS: Every meal plan must hit the exact calorie and macro targets provided (within 2% tolerance)
+3. REAL RECIPES: Use only real, practical recipes with common ingredients
+4. PRECISE MEASUREMENTS: Every ingredient must have exact measurements in grams or standard units
+5. INTERMITTENT FASTING: All meals must fit within 12pm-8pm eating window
+6. MEAL PREP FRIENDLY: Foods that store well for 3-5 days
+
+CRITICAL VARIETY REQUIREMENTS:
+- NEVER repeat the same protein source in one day
+- NEVER use generic recipe names like "Chicken & Rice" or "Beef & Sweet Potato"
+- Use specific, appetizing recipe names with cuisines/cooking methods
+- Rotate through different cuisines: Mediterranean, Asian, Mexican, Italian, American
+- Vary cooking methods: grilled, baked, stir-fried, slow-cooked, pan-seared
+- Generate COMPLETELY DIFFERENT recipes from any previous suggestions
+- Each meal must have a unique flavor profile and cooking style
+
+RECIPE NAMING EXAMPLES:
+- GOOD: "Mediterranean Herb-Crusted Salmon with Quinoa Tabbouleh"
+- GOOD: "Thai Basil Beef Stir-Fry with Jasmine Rice"
+- GOOD: "Mexican Chipotle Turkey Bowl with Cilantro Lime Rice"
+- BAD: "Chicken with Rice"
+- BAD: "Beef and Sweet Potato"
 
 CRITICAL - Use USDA-verified nutritional values:
 - ALL nutritional values will be validated against USDA FoodData Central
 - Use specific USDA food names (e.g., "Chicken, breast, meat only, cooked, grilled")
 - Include preparation method: "raw", "cooked", "grilled", "baked"
 - Be specific: "chicken breast, boneless, skinless, cooked" not just "chicken"
-- Your values MUST match USDA data within 10% or they will be corrected
 
 Common USDA-verified values per 100g:
 - Chicken breast, cooked: 165 cal, 31g protein, 0g carbs, 3.6g fat
+- Chicken thighs, cooked: 209 cal, 26g protein, 0g carbs, 10.9g fat
+- Ground beef 90% lean: 217 cal, 26g protein, 0g carbs, 12g fat
+- Salmon, cooked: 206 cal, 22g protein, 0g carbs, 13g fat
 - Rice, white, cooked: 130 cal, 2.7g protein, 28g carbs, 0.3g fat
+- Quinoa, cooked: 120 cal, 4.1g protein, 21g carbs, 1.9g fat
 - Sweet potato, baked: 90 cal, 2g protein, 21g carbs, 0.1g fat
 - Oil, olive: 884 cal, 0g protein, 0g carbs, 100g fat
 
@@ -212,7 +288,7 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
                     },
                     {"role": "user", "content": prompt}
                 ],
-                temperature=0.3,  # Lower temperature for more consistent nutritional accuracy
+                temperature=0.5,  # Balanced temperature for variety while maintaining accuracy
                 max_tokens=4000,
                 response_format={"type": "json_object"}
             )
@@ -232,12 +308,25 @@ You must return ONLY valid JSON with exact nutritional breakdowns. No other text
     
     def _build_single_day_prompt(self, body_weight: int, total_calories: int, 
                                           protein_g: int, carbs_g: int, fats_g: int, 
-                                          day_type: str, dietary_requirements: List[str]) -> str:
-        """Build optimized prompt for single day meal generation"""
+                                          day_type: str, dietary_requirements: List[str], 
+                                          recent_recipes: List[str] = None) -> str:
+        """Build optimized prompt for single day meal generation with variety"""
         
         restrictions = ', '.join(dietary_requirements) if dietary_requirements else 'None'
         
-        return f"""Create 3 meals for a {day_type} with EXACT macros:
+        # Format recent recipes to show only last 10 for context
+        if recent_recipes and len(recent_recipes) > 0:
+            # Take last 10 recipes
+            recent_10 = recent_recipes[-10:] if len(recent_recipes) > 10 else recent_recipes
+            recent_recipes_str = '\n'.join([f"- {recipe}" for recipe in recent_10])
+        else:
+            recent_recipes_str = 'None'
+        
+        # Add time-based variety seed
+        current_time = datetime.now()
+        variety_seed = f"{current_time.strftime('%Y-%m-%d %H:%M')}"
+        
+        return f"""Create 3 VARIED and DIVERSE meals for a {day_type} with EXACT macros:
 Calories: {total_calories} | Protein: {protein_g}g | Carbs: {carbs_g}g | Fats: {fats_g}g
 
 Schedule (Intermittent Fasting):
@@ -246,6 +335,27 @@ Schedule (Intermittent Fasting):
 - Meal 3: 7:30 PM (~35% calories)
 
 Dietary restrictions: {restrictions}
+Generation Time: {variety_seed}
+
+CRITICAL VARIETY REQUIREMENTS:
+1. Use DIFFERENT protein sources in each meal (vary between: chicken breast, chicken thighs, ground beef, steak, salmon, white fish, turkey, eggs, greek yogurt)
+2. Use DIFFERENT carb sources in each meal (vary between: white rice, brown rice, quinoa, sweet potato, white potato, pasta, oats, ezekiel bread)
+3. Use DIFFERENT cooking methods (grilled, baked, pan-seared, stir-fried, slow-cooked, roasted)
+4. Include DIFFERENT vegetables and flavors in each meal
+5. Be CREATIVE and UNIQUE based on the current time/date
+
+RECIPES TO AVOID (recently generated):
+{recent_recipes_str}
+
+IMPORTANT: Do NOT repeat any of the above recipes or use similar names. Create COMPLETELY NEW recipes.
+
+RECIPE INSPIRATION (choose different styles for variety):
+- Mediterranean: Greek chicken with quinoa and tzatziki
+- Asian: Teriyaki salmon with jasmine rice and stir-fried vegetables  
+- Mexican: Beef burrito bowl with cilantro lime rice
+- American: BBQ turkey meatballs with sweet potato wedges
+- Italian: Baked cod with roasted vegetables and garlic pasta
+- Power Bowls: Protein + grain + vegetables + healthy fat sauce
 
 Return JSON:
 {{
@@ -257,37 +367,53 @@ Return JSON:
             {{
                 "meal_number": 1,
                 "time": "12:00 PM",
-                "name": "Recipe Name",
+                "name": "UNIQUE Recipe Name (NO generic names like 'Chicken & Rice')",
                 "calories": exact_number,
                 "protein_g": exact_number,
                 "carbs_g": exact_number,
                 "fats_g": exact_number,
                 "ingredients": [
-                    {{"name": "chicken breast", "amount": 170, "unit": "g", "calories": 280, "protein_g": 52, "carbs_g": 0, "fats_g": 6}}
+                    {{"name": "specific ingredient", "amount": exact_grams, "unit": "g", "calories": X, "protein_g": X, "carbs_g": X, "fats_g": X}}
                 ],
-                "instructions": ["Step 1", "Step 2"]
+                "instructions": ["Specific step 1", "Specific step 2"]
             }},
-            // ... meal 2 and 3
+            // ... meal 2 and 3 with DIFFERENT proteins and carbs
         ],
         "daily_totals": {{"calories": sum, "protein_g": sum, "carbs_g": sum, "fats_g": sum}}
     }}
 }}
 
-CRITICAL: Sum of 3 meals MUST equal targets within 2%. Include all cooking oils in calculations.
+CRITICAL: 
+- Sum of 3 meals MUST equal targets within 2%
+- Each meal MUST use different protein and carb sources
+- Recipe names must be specific and appetizing (not generic)
 
 Common food macros per 100g:
 - Chicken breast (cooked): 165cal, 31g protein, 0g carbs, 3.6g fat
-- White rice (cooked): 130cal, 2.7g protein, 28g carbs, 0.3g fat  
+- Chicken thighs (cooked): 209cal, 26g protein, 0g carbs, 10.9g fat
+- Ground beef 90% lean: 217cal, 26g protein, 0g carbs, 12g fat
+- Salmon (cooked): 206cal, 22g protein, 0g carbs, 13g fat
+- White rice (cooked): 130cal, 2.7g protein, 28g carbs, 0.3g fat
+- Quinoa (cooked): 120cal, 4.1g protein, 21g carbs, 1.9g fat
 - Sweet potato (baked): 90cal, 2g protein, 21g carbs, 0.1g fat
-- Olive oil: 884cal, 0g protein, 0g carbs, 100g fat (NO carbs in oil!)
-- Ground beef 90% lean: 217cal, 26g protein, 0g carbs, 12g fat"""
+- Olive oil: 884cal, 0g protein, 0g carbs, 100g fat"""
     
-    def _build_meal_plan_prompt(self, user_data: Dict, maintenance_calories: int, training_days: List[str]) -> str:
-        """Build detailed prompt for meal plan generation"""
+    def _build_meal_plan_prompt(self, user_data: Dict, maintenance_calories: int, training_days: List[str], recent_recipes: List[str] = None) -> str:
+        """Build detailed prompt for meal plan generation with enhanced variety"""
         dietary_requirements = user_data.get('dietary_requirements', [])
         budget = user_data.get('budget', 150)
         
-        prompt = f"""Create a 7-day meal prep plan with the following requirements:
+        # Format recent recipes
+        if recent_recipes and len(recent_recipes) > 0:
+            recent_recipes_str = '\n'.join([f"- {recipe}" for recipe in recent_recipes])
+        else:
+            recent_recipes_str = 'None'
+        
+        # Add time-based variety seed
+        current_time = datetime.now()
+        variety_seed = f"{current_time.strftime('%Y-%m-%d %H:%M')}"
+        
+        prompt = f"""Create a DIVERSE 7-day meal prep plan with MAXIMUM VARIETY:
 
 USER PROFILE:
 - Body weight: {user_data.get('body_weight', 175)} lbs
@@ -308,11 +434,45 @@ NUTRITIONAL REQUIREMENTS:
 DIETARY RESTRICTIONS:
 {', '.join(dietary_requirements) if dietary_requirements else 'None'}
 
+VARIETY REQUIREMENTS (CRITICAL):
+1. Use AT LEAST 5 different protein sources across the week:
+   - Chicken breast, chicken thighs, ground beef, steak, ground turkey
+   - Salmon, white fish (cod/tilapia), eggs, greek yogurt
+2. Use AT LEAST 5 different carb sources across the week:
+   - White rice, brown rice, quinoa, sweet potato, white potato
+   - Pasta, oats, ezekiel bread, rice cakes
+3. Each day MUST have different recipes (no exact repeats on consecutive days)
+4. Maximum 2 repetitions of any recipe throughout the week
+5. Include variety in cooking methods and cuisines:
+   - Mediterranean, Asian, Mexican, Italian, American BBQ
+   - Grilled, baked, stir-fried, slow-cooked, pan-seared
+
+RECIPE NAME REQUIREMENTS:
+- Use specific, appetizing names (e.g., "Mediterranean Herb-Crusted Salmon" not "Salmon with Rice")
+- Include cooking method or cuisine in name when possible
+- Make names sound restaurant-quality and appealing
+
+EXAMPLE VARIED RECIPES:
+- Greek Lemon Chicken with Quinoa Tabbouleh
+- Asian Beef Stir-Fry with Jasmine Rice
+- BBQ Turkey Meatballs with Sweet Potato Mash
+- Teriyaki Glazed Salmon with Sesame Brown Rice
+- Mexican Beef Burrito Bowl with Cilantro Lime Rice
+- Italian Herb Baked Cod with Roasted Vegetables
+- Power Protein Pancakes with Greek Yogurt
+- Moroccan Spiced Chicken with Couscous
+
+PREVIOUSLY GENERATED RECIPES (DO NOT REPEAT):
+{recent_recipes_str}
+
+IMPORTANT: Create COMPLETELY NEW recipes that are different from all of the above.
+
 CONSTRAINTS:
 - Weekly budget: ${budget}
 - Meals should be meal-prep friendly (can be stored 3-5 days)
-- Include variety but repeat some recipes for efficiency
 - Focus on whole foods and simple preparation
+- Prioritize variety over repetition for better adherence
+- Generation timestamp: {variety_seed}
 
 Return a JSON object with this exact structure:
 {{
@@ -660,6 +820,84 @@ Provide optimization suggestions in JSON format:
             logger.error(f"Error optimizing shopping list: {str(e)}")
             return shopping_list
     
+    def _get_recent_recipes(self, user_id: str = None) -> List[str]:
+        """Get recently generated recipes from cache to avoid repetition"""
+        if not user_id:
+            return []
+        
+        try:
+            cache_key = f'recent_recipes:{user_id}'
+            cached_recipes = default_cache.get(cache_key)
+            return cached_recipes if cached_recipes else []
+        except Exception as e:
+            logger.warning(f"Could not retrieve recent recipes: {str(e)}")
+            return []
+    
+    def _track_generation_request(self, user_id: str) -> None:
+        """Track that a generation request was made for variety seed"""
+        if not user_id:
+            return
+        
+        try:
+            # Add timestamp to generation history for variety
+            cache_key = f'generation_history:{user_id}'
+            history = default_cache.get(cache_key) or []
+            history.append({
+                'timestamp': datetime.now().isoformat(),
+                'date': datetime.now().strftime('%Y-%m-%d')
+            })
+            # Keep last 10 generation requests
+            if len(history) > 10:
+                history = history[-10:]
+            default_cache.set(cache_key, history, ttl=7 * 24 * 3600)  # 1 week
+        except Exception as e:
+            logger.warning(f"Could not track generation request: {str(e)}")
+    
+    def _save_recipes_to_cache(self, user_id: str, meal_plan: Dict) -> None:
+        """Save generated recipes to cache for variety tracking"""
+        if not user_id:
+            return
+        
+        try:
+            # Extract all recipe names from the meal plan
+            recipe_names = []
+            
+            # Handle single day plan
+            if 'day_plan' in meal_plan:
+                for meal in meal_plan['day_plan'].get('meals', []):
+                    if 'name' in meal:
+                        recipe_names.append(meal['name'])
+            
+            # Handle 7-day plan
+            elif 'meal_plan' in meal_plan:
+                for day_key, day_data in meal_plan['meal_plan'].items():
+                    if day_key.startswith('day_') and 'meals' in day_data:
+                        for meal_key, meal_data in day_data['meals'].items():
+                            if 'name' in meal_data:
+                                recipe_names.append(meal_data['name'])
+            
+            # Get existing recipes and add new ones
+            cache_key = f'recent_recipes:{user_id}'
+            existing = self._get_recent_recipes(user_id)
+            
+            # Combine and keep last 30 unique recipes
+            all_recipes = existing + recipe_names
+            unique_recipes = []
+            seen = set()
+            for recipe in reversed(all_recipes):
+                if recipe not in seen:
+                    unique_recipes.append(recipe)
+                    seen.add(recipe)
+            
+            # Keep only the most recent 30 recipes
+            recent_30 = list(reversed(unique_recipes[:30]))
+            
+            # Cache for 2 weeks
+            default_cache.set(cache_key, recent_30, ttl=14 * 24 * 3600)
+            
+        except Exception as e:
+            logger.warning(f"Could not save recipes to cache: {str(e)}")
+    
     def _validate_and_enhance_meal_plan(self, meal_plan_data: Dict, user_data: Dict) -> Dict[str, Any]:
         """Validate AI-generated meal plan and add enhancements"""
         # Add metadata
@@ -672,6 +910,10 @@ Provide optimization suggestions in JSON format:
             },
             'ai_model': self.model
         }
+        
+        # Save recipes to cache for variety tracking
+        if 'user_id' in user_data:
+            self._save_recipes_to_cache(user_data['user_id'], meal_plan_data)
         
         # Validate nutritional targets are met
         # Add any missing fields with defaults
@@ -707,18 +949,18 @@ Provide optimization suggestions in JSON format:
                     {
                         "meal_number": 1,
                         "time": "12:00 PM",
-                        "name": "Grilled Chicken & Sweet Potato Bowl",
-                        "description": "High-protein lunch with complex carbs",
+                        "name": "Mediterranean Grilled Chicken Quinoa Salad",
+                        "description": "Fresh herb-marinated chicken with citrus quinoa",
                         "calories": round(total_calories * 0.30),
                         "protein_g": round(protein_g * 0.30),
                         "carbs_g": round(carbs_g * 0.30),
                         "fats_g": round(fats_g * 0.30),
-                        "fiber_g": 6,
+                        "fiber_g": 7,
                         "prep_time": 15,
                         "cook_time": 25,
                         "ingredients": [
                             {
-                                "name": "Grilled chicken breast",
+                                "name": "Chicken breast, grilled",
                                 "amount": 150,
                                 "unit": "g",
                                 "calories": 247,
@@ -727,27 +969,28 @@ Provide optimization suggestions in JSON format:
                                 "fats_g": 5
                             },
                             {
-                                "name": "Sweet potato (baked)",
-                                "amount": 200,
+                                "name": "Quinoa, cooked",
+                                "amount": 180,
                                 "unit": "g",
-                                "calories": 180,
-                                "protein_g": 4,
-                                "carbs_g": 42,
-                                "fats_g": 0
+                                "calories": 216,
+                                "protein_g": 7,
+                                "carbs_g": 38,
+                                "fats_g": 3
                             }
                         ],
                         "instructions": [
-                            "Season and grill chicken breast",
-                            "Bake sweet potato at 400°F for 45 minutes",
-                            "Serve with steamed vegetables"
+                            "Season chicken with oregano, thyme, and lemon",
+                            "Grill until internal temp reaches 165°F",
+                            "Mix quinoa with diced tomatoes, cucumber, and parsley",
+                            "Drizzle with olive oil and lemon juice"
                         ],
-                        "meal_prep_tips": "Store in containers for up to 4 days"
+                        "meal_prep_tips": "Store chicken and quinoa separately for best texture"
                     },
                     {
                         "meal_number": 2,
                         "time": "4:30 PM",
-                        "name": "Post-Workout Protein Bowl",
-                        "description": "Recovery meal with fast-digesting carbs",
+                        "name": "Pan-Seared Salmon with Brown Rice and Asparagus",
+                        "description": "Omega-rich salmon with nutty brown rice",
                         "calories": round(total_calories * 0.35),
                         "protein_g": round(protein_g * 0.35),
                         "carbs_g": round(carbs_g * 0.35),
@@ -755,25 +998,73 @@ Provide optimization suggestions in JSON format:
                         "fiber_g": 4,
                         "prep_time": 10,
                         "cook_time": 20,
-                        "ingredients": [],
-                        "instructions": [],
-                        "meal_prep_tips": "Best consumed fresh after workout"
+                        "ingredients": [
+                            {
+                                "name": "Salmon fillet, baked",
+                                "amount": 170,
+                                "unit": "g",
+                                "calories": 350,
+                                "protein_g": 37,
+                                "carbs_g": 0,
+                                "fats_g": 22
+                            },
+                            {
+                                "name": "White rice, cooked",
+                                "amount": 200,
+                                "unit": "g",
+                                "calories": 260,
+                                "protein_g": 5,
+                                "carbs_g": 56,
+                                "fats_g": 1
+                            }
+                        ],
+                        "instructions": [
+                            "Brush salmon with homemade teriyaki glaze",
+                            "Bake at 400°F for 12-15 minutes",
+                            "Steam rice and top with sesame seeds",
+                            "Serve with steamed edamame"
+                        ],
+                        "meal_prep_tips": "Cook salmon fresh; rice can be prepped ahead"
                     },
                     {
                         "meal_number": 3,
                         "time": "7:30 PM",
-                        "name": "Lean Beef & Rice Dinner",
-                        "description": "Satisfying dinner with balanced macros",
+                        "name": "BBQ Turkey Meatballs with Sweet Potato Wedges",
+                        "description": "Homemade turkey meatballs with roasted sweet potatoes",
                         "calories": round(total_calories * 0.35),
                         "protein_g": round(protein_g * 0.35),
                         "carbs_g": round(carbs_g * 0.35),
                         "fats_g": round(fats_g * 0.35),
-                        "fiber_g": 5,
+                        "fiber_g": 8,
                         "prep_time": 15,
                         "cook_time": 30,
-                        "ingredients": [],
-                        "instructions": [],
-                        "meal_prep_tips": "Can be prepped in bulk for the week"
+                        "ingredients": [
+                            {
+                                "name": "Ground beef 90% lean, cooked",
+                                "amount": 150,
+                                "unit": "g",
+                                "calories": 325,
+                                "protein_g": 39,
+                                "carbs_g": 0,
+                                "fats_g": 18
+                            },
+                            {
+                                "name": "White rice, cooked",
+                                "amount": 180,
+                                "unit": "g",
+                                "calories": 234,
+                                "protein_g": 5,
+                                "carbs_g": 50,
+                                "fats_g": 1
+                            }
+                        ],
+                        "instructions": [
+                            "Season beef with cumin, chili powder, and paprika",
+                            "Cook rice with lime juice and chopped cilantro",
+                            "Top with black beans, salsa, and Greek yogurt",
+                            "Add fresh lettuce and pico de gallo"
+                        ],
+                        "meal_prep_tips": "Store components separately and assemble when eating"
                     }
                 ],
                 "daily_totals": {
@@ -805,9 +1096,9 @@ Provide optimization suggestions in JSON format:
                     "meals": {
                         "meal_1": {
                             "time": "12:00 PM",
-                            "name": "Grilled Chicken Power Bowl",
+                            "name": "Mediterranean Lemon Herb Chicken with Quinoa Pilaf",
                             "meal_type": "lunch",
-                            "description": "High-protein bowl with quinoa and vegetables",
+                            "description": "Greek-inspired bowl with fresh herbs and citrus",
                             "calories": 650,
                             "protein_g": 45,
                             "carbs_g": 65,
@@ -822,13 +1113,67 @@ Provide optimization suggestions in JSON format:
                                 {"name": "Olive oil", "amount": 1, "unit": "tbsp", "calories": 120}
                             ],
                             "instructions": [
-                                "Season chicken with herbs and spices",
-                                "Grill chicken for 6-7 minutes per side",
-                                "Cook quinoa according to package directions",
-                                "Steam broccoli until tender",
-                                "Combine in bowl and drizzle with olive oil"
+                                "Marinate chicken in lemon, oregano, and garlic",
+                                "Grill chicken until golden and cooked through",
+                                "Cook quinoa with vegetable broth for extra flavor",
+                                "Roast broccoli with garlic and lemon zest",
+                                "Combine in bowl with fresh herbs and feta"
                             ],
-                            "meal_prep_tips": "Store components separately. Reheat chicken and quinoa, add fresh vegetables."
+                            "meal_prep_tips": "Store components separately. Chicken stays juicy when reheated gently."
+                        },
+                        "meal_2": {
+                            "time": "4:30 PM",
+                            "name": "Asian Beef Stir-Fry with Jasmine Rice",
+                            "meal_type": "snack",
+                            "description": "Quick stir-fry with tender beef and crisp vegetables",
+                            "calories": 580,
+                            "protein_g": 38,
+                            "carbs_g": 52,
+                            "fats_g": 18,
+                            "fiber_g": 5,
+                            "prep_time": 10,
+                            "cook_time": 15,
+                            "ingredients": [
+                                {"name": "Lean beef strips", "amount": 5, "unit": "oz", "calories": 310},
+                                {"name": "Jasmine rice", "amount": 1, "unit": "cup cooked", "calories": 205},
+                                {"name": "Mixed vegetables", "amount": 1.5, "unit": "cups", "calories": 45},
+                                {"name": "Sesame oil", "amount": 2, "unit": "tsp", "calories": 80}
+                            ],
+                            "instructions": [
+                                "Slice beef thinly against the grain",
+                                "Stir-fry beef in hot wok until browned",
+                                "Add vegetables and stir-fry sauce",
+                                "Serve over fluffy jasmine rice",
+                                "Garnish with sesame seeds and scallions"
+                            ],
+                            "meal_prep_tips": "Keep sauce separate until reheating to maintain texture."
+                        },
+                        "meal_3": {
+                            "time": "7:30 PM",
+                            "name": "Teriyaki Glazed Salmon with Sweet Potato Mash",
+                            "meal_type": "dinner",
+                            "description": "Omega-3 rich salmon with creamy sweet potato",
+                            "calories": 720,
+                            "protein_g": 42,
+                            "carbs_g": 68,
+                            "fats_g": 22,
+                            "fiber_g": 9,
+                            "prep_time": 15,
+                            "cook_time": 25,
+                            "ingredients": [
+                                {"name": "Salmon fillet", "amount": 6, "unit": "oz", "calories": 367},
+                                {"name": "Sweet potato", "amount": 1, "unit": "large", "calories": 160},
+                                {"name": "Green beans", "amount": 1, "unit": "cup", "calories": 35},
+                                {"name": "Teriyaki glaze", "amount": 2, "unit": "tbsp", "calories": 60}
+                            ],
+                            "instructions": [
+                                "Brush salmon with homemade teriyaki glaze",
+                                "Bake salmon at 400°F for 12-15 minutes",
+                                "Steam and mash sweet potato with cinnamon",
+                                "Blanch green beans until crisp-tender",
+                                "Plate beautifully for an Instagram-worthy meal"
+                            ],
+                            "meal_prep_tips": "Cook salmon fresh; sweet potato mash reheats perfectly."
                         }
                     }
                 }

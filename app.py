@@ -942,6 +942,7 @@ def generate_meal_plan():
         # Generate meal plan
         ai_service = OpenAIMealService()
         user_data = {
+            'user_id': user_id,  # Add user_id for variety tracking
             'body_weight': profile['body_weight'],
             'age': profile['age'],
             'gender': profile['gender'],
@@ -978,6 +979,7 @@ def generate_meal_plan():
                 
                 # Prepare user data for AI
                 user_data = {
+                    'user_id': user_id,  # Add user_id for variety tracking
                     'body_weight': float(profile['body_weight']),
                     'age': profile.get('age', 25),
                     'gender': profile.get('gender', 'male'),

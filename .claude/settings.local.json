@@ -1,0 +1,8 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:md-pilot.com)"
+    ],
+    "deny": []
+  }
+}
