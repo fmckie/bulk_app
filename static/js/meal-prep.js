@@ -60,39 +60,7 @@ function setupEventListeners() {
         printListBtn.addEventListener('click', printShoppingList);
     }
     
-    // AI Chat
-    const aiFab = document.getElementById('aiFab');
-    const aiChat = document.getElementById('aiChat');
-    const chatClose = document.getElementById('chatClose');
-    const chatInput = document.getElementById('chatInput');
-    const chatSend = document.getElementById('chatSend');
-    
-    if (aiFab) {
-        aiFab.addEventListener('click', () => {
-            aiChat.style.display = aiChat.style.display === 'none' ? 'flex' : 'none';
-            if (aiChat.style.display === 'flex') {
-                chatInput.focus();
-            }
-        });
-    }
-    
-    if (chatClose) {
-        chatClose.addEventListener('click', () => {
-            aiChat.style.display = 'none';
-        });
-    }
-    
-    if (chatSend) {
-        chatSend.addEventListener('click', sendChatMessage);
-    }
-    
-    if (chatInput) {
-        chatInput.addEventListener('keypress', (e) => {
-            if (e.key === 'Enter') {
-                sendChatMessage();
-            }
-        });
-    }
+    // Removed AI Chat functionality
     
     // Recipe modal
     const modal = document.getElementById('recipeModal');
@@ -121,7 +89,7 @@ async function handleFormSubmit(e) {
     const requestData = {
         dietary_requirements: dietaryRequirements,
         budget: parseFloat(formData.get('budget')),
-        use_ai: document.getElementById('aiAssistant').checked
+        use_ai: true // Always use AI for meal generation
     };
     
     // Save preferences
@@ -171,12 +139,10 @@ function showLoadingState() {
     
     // Cycle through loading messages
     const messages = [
-        'Analyzing nutritional requirements...',
-        'Optimizing for your budget and preferences...',
-        'Selecting recipes from thousands of options...',
-        'Calculating precise macronutrients...',
-        'Creating your shopping list...',
-        'Almost done...'
+        'Calculating nutrition targets...',
+        'Building your meal plan...',
+        'Creating shopping list...',
+        'Finalizing details...'
     ];
     
     let messageIndex = 0;
@@ -686,48 +652,7 @@ async function loadSavedPlan(planId) {
     }
 }
 
-// AI Chat functionality
-async function sendChatMessage() {
-    const input = document.getElementById('chatInput');
-    const message = input.value.trim();
-    
-    if (!message) return;
-    
-    // Add user message to chat
-    addChatMessage(message, 'user');
-    input.value = '';
-    
-    // Send to AI
-    try {
-        const response = await fetch('/api/meal-prep/chat', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-                message: message,
-                context: currentMealPlan
-            })
-        });
-        
-        if (response.ok) {
-            const data = await response.json();
-            addChatMessage(data.response, 'assistant');
-        }
-    } catch (error) {
-        addChatMessage('Sorry, I encountered an error. Please try again.', 'assistant');
-    }
-}
-
-// Add message to chat
-function addChatMessage(message, sender) {
-    const messagesContainer = document.getElementById('chatMessages');
-    const messageDiv = document.createElement('div');
-    messageDiv.className = `chat-message ${sender}`;
-    messageDiv.innerHTML = `<p>${message}</p>`;
-    messagesContainer.appendChild(messageDiv);
-    messagesContainer.scrollTop = messagesContainer.scrollHeight;
-}
+// Removed AI Chat functionality
 
 // Customize meal
 function customizeMeal(dayNumber, mealKey) {

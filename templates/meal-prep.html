@@ -9,8 +9,8 @@
 {% block content %}
 <div class="container">
     <div class="page-header">
-        <h1>AI-Powered Meal Prep Planner</h1>
-        <p class="subtitle">Create your personalized 7-day meal plan</p>
+        <h1>Meal Prep Dashboard</h1>
+        <p class="subtitle">Plan your weekly meals with precision nutrition</p>
     </div>
 
     <!-- Meal Plan Generation Form -->
@@ -59,16 +59,11 @@
 
                 </div>
 
-                <!-- AI Assistant Toggle -->
-                <div class="ai-assistant-toggle">
-                    <label class="toggle-label">
-                        <input type="checkbox" id="aiAssistant" checked>
-                        <span>Use AI Assistant for personalized recommendations</span>
-                    </label>
-                </div>
+                <!-- Hidden AI toggle for backend compatibility -->
+                <input type="hidden" id="aiAssistant" value="true">
 
                 <button type="submit" class="btn btn-primary btn-lg">
-                    <i class="fas fa-magic"></i> Generate Meal Plan
+                    Generate Meal Plan
                 </button>
             </form>
         </div>
@@ -76,11 +71,10 @@
 
     <!-- Loading State -->
     <div class="loading-state" id="loadingState" style="display: none;">
-        <div class="ai-loader">
+        <div class="loader">
             <div class="spinner"></div>
-            <h3>AI is creating your personalized meal plan...</h3>
-            <p>Analyzing nutritional requirements...</p>
-            <p class="loading-message" id="loadingMessage">Optimizing for your budget and preferences...</p>
+            <h3>Creating your meal plan</h3>
+            <p class="loading-message" id="loadingMessage">Calculating nutrition targets...</p>
         </div>
     </div>
 
@@ -186,27 +180,7 @@
     </div>
 </div>
 
-<!-- AI Chat Assistant -->
-<div class="ai-chat" id="aiChat" style="display: none;">
-    <div class="chat-header">
-        <h4>AI Meal Assistant</h4>
-        <button class="chat-close" id="chatClose">&times;</button>
-    </div>
-    <div class="chat-messages" id="chatMessages">
-        <div class="chat-message assistant">
-            <p>Hi! I can help you customize your meal plan. Ask me about substitutions, nutritional information, or cooking tips!</p>
-        </div>
-    </div>
-    <div class="chat-input">
-        <input type="text" id="chatInput" placeholder="Ask me anything...">
-        <button id="chatSend"><i class="fas fa-paper-plane"></i></button>
-    </div>
-</div>
-
-<!-- Float AI Assistant Button -->
-<button class="ai-fab" id="aiFab" title="AI Assistant">
-    <i class="fas fa-robot"></i>
-</button>
+<!-- Removed AI Chat Assistant -->
 
 <!-- Success/Error Messages -->
 <div class="message-toast" id="messageToast"></div>
